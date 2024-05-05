@@ -1,0 +1,12 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<CustomField xmlns="http://soap.sforce.com/2006/04/metadata">
+    <fullName>Has_Member_Price__c</fullName>
+    <defaultValue>false</defaultValue>
+    <description>If checked, a member price level will be generated for the course option product</description>
+    <externalId>false</externalId>
+    <inlineHelpText>If checked, a member price level will be generated for the course option product</inlineHelpText>
+    <label>Has Member Price</label>
+    <trackHistory>false</trackHistory>
+    <trackTrending>false</trackTrending>
+    <type>Checkbox</type>
+</CustomField>

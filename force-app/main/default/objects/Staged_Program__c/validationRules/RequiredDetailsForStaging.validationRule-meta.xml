@@ -1,0 +1,24 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<ValidationRule xmlns="http://soap.sforce.com/2006/04/metadata">
+    <fullName>RequiredDetailsForStaging</fullName>
+    <active>true</active>
+    <description>Staged records must have all required details</description>
+    <errorConditionFormula>AND(
+ ISPICKVAL( Status__c, &quot;Staged&quot; ),
+ OR(
+  ISBLANK( Program__c ),
+  ISBLANK( Course__c ),
+  ISBLANK( Course_Session_Name__c ),
+  ISBLANK( Course_Option_Name__c ),
+  ISBLANK( Days_of_Week__c ),
+  ISBLANK( Start_Date__c ),
+  ISBLANK( End_Date__c ),
+  ISBLANK( Start_Time__c ),
+  ISBLANK( End_Time__c ),
+  ISBLANK( GL_Account__c ),
+  ISBLANK( Primary_Facility__c ),
+  ISBLANK( Public_Price__c )
+ )
+)</errorConditionFormula>
+    <errorMessage>Staged records must have all required details</errorMessage>
+</ValidationRule>
