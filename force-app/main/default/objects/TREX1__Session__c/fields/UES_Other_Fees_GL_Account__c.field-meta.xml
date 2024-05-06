@@ -1,0 +1,13 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<CustomField xmlns="http://soap.sforce.com/2006/04/metadata">
+    <fullName>UES_Other_Fees_GL_Account__c</fullName>
+    <deleteConstraint>SetNull</deleteConstraint>
+    <externalId>false</externalId>
+    <label>UES Other Fees GL Account</label>
+    <referenceTo>TREX1__GL_Account__c</referenceTo>
+    <relationshipLabel>Sessions (UES Other Fees)</relationshipLabel>
+    <relationshipName>UES_Other_Sessions</relationshipName>
+    <required>false</required>
+    <trackTrending>false</trackTrending>
+    <type>Lookup</type>
+</CustomField>
