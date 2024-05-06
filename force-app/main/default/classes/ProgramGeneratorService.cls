@@ -9,6 +9,7 @@ public with sharing class ProgramGeneratorService {
     private static final String RECORD_TYPE_PRICE_LEVEL = 'Dollar';
     private static final String RECORD_TYPE_PBS = 'Fee';
     private static final String GBG_NAME = 'Asphalt Green';
+    private static final String COURSE_OPTION_TYPE = 'Standard Course Option';
 
     private static final Decimal TRANSFER_FEE = 15.00;
     private static final Decimal WITHDRAWAL_FEE = 15.00;
@@ -20,6 +21,7 @@ public with sharing class ProgramGeneratorService {
     private Map<Id, Staged_Program__c> stagedPrograms;
     private Map<Id, TREX1__Session__c> sessions;
     private Map<String, TREX1__Course_Session__c> courseSessions = new Map<String, TREX1__Course_Session__c>();
+    private Map<String, TREX1__Course_Option__c> courseOptions = new Map<String, TREX1__Course_Option__c>();
     private Map<String, TREX1__Product__c> products = new Map<String, TREX1__Product__c>();
 
     // Utility maps
@@ -59,9 +61,116 @@ public with sharing class ProgramGeneratorService {
         Map<String, TREX1__Product__c> mapProducts = getProductMap();
 
         // Create course options
+        List<TREX1__Course_Option__c> lstCos = createCourseOptions();
 
-        // Create course session options
+        // Update staged programs
+        List<Staged_Program__c> lstStagedProgramsToUpdate = new List<Staged_Program__c>();
+        for (Staged_Program__c sp : stagedPrograms.values()) {
+            sp.Course_Session__c = courseSessions.get(sp.Course_Session_Key__c).Id;
+            sp.Course_Option__c = courseOptions.get(sp.Id).Id;
+            lstStagedProgramsToUpdate.add(sp);
+        }
+        Database.update(lstStagedProgramsToUpdate, true, AccessLevel.USER_MODE);
+    }
 
+    private List<TREX1__Course_Option__c> createCourseOptions() {
+        List<TREX1__Course_Option__c> lstOptions = new List<TREX1__Course_Option__c>();
+
+        for (Staged_Program__c sp : stagedPrograms.values()) {
+            TREX1__Session__c session = sessions.get(sp.Session__c);
+
+            TREX1__Course_Option__c co = new TREX1__Course_Option__c();
+            co.Name = sp.Course_Option_Name__c;
+            co.TREX1__Code__c = sp.Course_Option_Code__c;
+            co.TREX1__Type__c = COURSE_OPTION_TYPE;
+            co.Approval_Status__c = 'Pending Review';
+            co.TREX1__Status__c = 'Draft';
+            co.Minimum_Participants__c = sp.Minimum_Participants__c;
+            co.TREX1__Capacity__c = sp.Capacity__c;
+            co.TREX1__Age_Min__c = sp.Minimum_Age__c;
+            co.TREX1__Age_Max__c = sp.Maximum_Age__c;
+            co.TREX1__Age_as_of_date__c = sp.Start_Date__c;
+            co.TREX1__Start_Date__c = sp.Start_Date__c;
+            co.TREX1__End_Date__c = sp.End_Date__c;
+            co.TREX1__Start_Time__c = sp.Start_Time__c;
+            co.TREX1__End_Time__c = sp.End_Time__c;
+            co.Exception_Dates__c = sp.Exception_Dates__c;
+            co.Primary_Facility__c = sp.Primary_Facility__c;
+            co.TREX1__Location__c = sp.Location__c;
+            co.TREX1__Day_of_Week__c = sp.Days_of_Week__c;
+            co.NonMemberPrice__c = sp.Public_Price__c;
+            co.TREX1__Available__c = true;
+            co.TREX1__Available_Online__c = true;
+
+            // Product
+            co.TREX1__Product__c = products.get(sp.Price_Level_Key__c).Id;
+
+            // Static values
+            co.TREX1__Enable_Automated_Waitlist__c = true;
+            co.TREX1__Overbooking_Capacity__c = 2;
+            co.TREX1__Pending_Active_Total__c = 0;
+            co.TREX1__Setup_Time_Required__c = 0;
+            co.TREX1__Tear_Down_Time_Required__c = 0;
+            co.TREX1__Transfer_in_within_Program__c = true;
+            co.TREX1__Transfer_out_within_Program__c = true;
+            co.TREX1__Unlimited_Capacity__c = false;
+            co.TREX1__Unlimited_Overbooking_Capacity__c = false;
+            co.TREX1__Unlimited_Waitlist_Capacity__c = true;
+            co.TREX1__Waitlist_Capacity__c = 0;
+            co.TREX1__Waitlist_Pending_Confirmation_Total__c = 0;
+            co.TREX1__Waitlist_Total__c = 0;
+            co.TREX1__Registration_Total__c = 0;
+            co.TREX1__Enable_Calendar_Booking_Download__c = false;
+
+            // Online display card
+            co.TREX1__Display_Number_of_Classes__c = true;
+            co.TREX1__Show_Age_Range__c = true;
+            co.TREX1__Show_Capacity_Online__c = true;
+            co.TREX1__Show_Cost__c = true;
+            co.TREX1__Show_Days__c = true;
+            co.TREX1__Show_Grade_Range__c = false;
+            co.TREX1__Show_Instructor__c = false;
+            co.TREX1__Show_Location__c = true;
+            co.TREX1__Show_Time_Window__c = true;
+            co.TREX1__Show_Watlist_Capacity__c = false;
+
+            // Registration availability info
+            co.TREX1__Register_From_Date__c = session.TREX1__Register_From_Date__c;
+            co.TREX1__Register_To_Date__c = session.TREX1__Register_To_Date__c;
+            co.TREX1__Register_Online_From_Date__c = session.TREX1__Register_Online_From_Date__c;
+            co.TREX1__Register_Online_To_Date__c = session.TREX1__Register_Online_To_Date__c;
+            co.TREX1__Register_From_Time__c = '8:30 AM';
+            co.TREX1__Register_To_Time__c = sp.Start_Time__c;
+            co.TREX1__Register_Online_From_Time__c = '8:30 AM';
+            co.TREX1__Register_Online_To_Time__c = sp.Start_Time__c;
+            co.TREX1__Early_Register__c = false;
+            co.TREX1__Early_Register_Online__c = false;
+            co.TREX1__Early_Register_From_Time__c = '12:00 AM';
+            co.TREX1__Early_Register_Online_From_Time__c = '12:00 AM';
+            co.TREX1__Early_Register_Online_To_Time__c = '11:59 PM';
+            co.TREX1__Early_Register_To_Time__c = '11:59 PM';
+            
+            co.TREX1__Legacy_Id__c = sp.Id;
+            lstOptions.add(co);
+        }
+
+        Database.insert(lstOptions, true, AccessLevel.USER_MODE);
+
+        // Create csos
+        List<TREX1__Course_Session_Option__c> lstCsos = new List<TREX1__Course_Session_Option__c>();
+        for (TREX1__Course_Option__c co : lstOptions) {
+            TREX1__Course_Session_Option__c newCso = new TREX1__Course_Session_Option__c();
+            String csKey = stagedPrograms.get(co.TREX1__Legacy_Id__c).Course_Session_Key__c;
+            newCso.TREX1__Course_Session__c = courseSessions.get(csKey).Id;
+            newCso.TREX1__Course_Option__c = co.Id;
+            newCso.TREX1__Option_Available__c = true;
+            newCso.TREX1__Available_Online__c = true;
+            lstCsos.add(newCso);
+            courseOptions.put(co.TREX1__Legacy_Id__c, co);
+        }
+        Database.insert(lstCsos, true, AccessLevel.USER_MODE);
+
+        return lstOptions;
     }
 
     /**
@@ -406,7 +515,11 @@ public with sharing class ProgramGeneratorService {
     private static Id getGlobalBillingGroupId() {
         if (gbgId == null) {
             List<TREX1__Global_Billing_Group__c> lstGbgs = [
-                SELECT Id FROM TREX1__Global_Billing_Group__c WHERE Name = :GBG_NAME WITH USER_MODE LIMIT 1
+                SELECT Id 
+                  FROM TREX1__Global_Billing_Group__c 
+                 WHERE Name = :GBG_NAME 
+                  WITH USER_MODE 
+                 LIMIT 1
             ];
             gbgId = lstGbgs[0].Id;
         }
