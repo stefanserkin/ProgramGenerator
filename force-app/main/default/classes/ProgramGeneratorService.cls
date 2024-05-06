@@ -8,11 +8,16 @@ public with sharing class ProgramGeneratorService {
     private static final String RECORD_TYPE_PRODUCT = 'Registration_Fee';
     private static final String RECORD_TYPE_PRICE_LEVEL = 'Dollar';
     private static final String RECORD_TYPE_PBS = 'Fee';
+    private static final String GBG_NAME = 'Asphalt Green';
 
     private static final Decimal TRANSFER_FEE = 15.00;
     private static final Decimal WITHDRAWAL_FEE = 15.00;
+    private static final Decimal INITIAL_FEE_AMOUNT = 25.00;
 
-    private List<Staged_Program__c> stagedPrograms;
+    private static Id gbgId;
+    private static Date pbsStartDate = Date.newInstance(2024,1,1);
+
+    private Map<Id, Staged_Program__c> stagedPrograms;
     private Map<Id, TREX1__Session__c> sessions;
     private Map<String, TREX1__Course_Session__c> courseSessions = new Map<String, TREX1__Course_Session__c>();
     private Map<String, TREX1__Product__c> products = new Map<String, TREX1__Product__c>();
@@ -65,7 +70,7 @@ public with sharing class ProgramGeneratorService {
     private Map<String, TREX1__Product__c> getProductMap() {
         // Get existing products for price level keys
         mapProdKeyToStagedProgram = new Map<String, Staged_Program__c>();
-        for (Staged_Program__c sp : stagedPrograms) {
+        for (Staged_Program__c sp : stagedPrograms.values()) {
             mapProdKeyToStagedProgram.put(sp.Price_Level_Key__c, sp);
         }
         for (TREX1__Product__c prod : queryForProducts(mapProdKeyToStagedProgram.keySet())) {
@@ -103,6 +108,7 @@ public with sharing class ProgramGeneratorService {
             TREX1__Product__c prod = new TREX1__Product__c();
             prod.Name = sp.GL_Account__r.Name + ' - ' + sp.Public_Price__c.format();
             prod.Key__c = sp.Price_Level_Key__c;
+            prod.TREX1__Global_Billing_Group__c = getGlobalBillingGroupId();
             prod.TREX1__Price_Description_Override__c = true;
             prod.TREX1__Price_Description__c = sp.Has_Member_Price__c
                 ? 'Public ' + sp.Public_Price__c.format() + '/Member ' + sp.Member_Price__c.format()
@@ -120,53 +126,33 @@ public with sharing class ProgramGeneratorService {
         List<TREX1__Price_Level__c> lstPriceLevels = new List<TREX1__Price_Level__c>();
         for (TREX1__Product__c prod : lstProducts) {
             lstPriceLevels.add( getNewPriceLevel(prod, PRICE_TYPE_PUBLIC) );
-            lstPriceLevels.add( getNewPriceLevel(prod, PRICE_TYPE_MEMBER) );
+            if (mapProdKeyToStagedProgram.get(prod.Key__c).Has_Member_Price__c) {
+                lstPriceLevels.add( getNewPriceLevel(prod, PRICE_TYPE_MEMBER) );
+            }
         }
         Database.insert(lstPriceLevels, true, AccessLevel.USER_MODE);
 
         // Planned Billing Schedules
         List<TREX1__Planned_Billing_Schedule__c> lstPbs = new List<TREX1__Planned_Billing_Schedule__c>();
         for (TREX1__Price_Level__c pl : lstPriceLevels) {
+            Staged_Program__c sp = stagedPrograms.get(pl.TREX1__Legacy_Id__c);
             TREX1__Planned_Billing_Schedule__c pbs = new TREX1__Planned_Billing_Schedule__c();
+            pbs.RecordTypeId = pbsRecordTypeId;
+            pbs.Name = pl.Name;
+            pbs.TREX1__Price_Level__c = pl.Id;
+            pbs.TREX1__End_Date_Setting__c = 'Fixed End Date';
+            pbs.TREX1__Number_Of_Terms__c = 1;
+            pbs.TREX1__Proration_Setting__c = 'Do Not Prorate';
+            pbs.TREX1__Start_Date__c = pbsStartDate;
+            pbs.TREX1__Term_Type__c = 'One Time';
+            pbs.TREX1__Amount__c = pl.TREX1__Price_Type__c == PRICE_TYPE_PUBLIC ? sp.Public_Price__c : sp.Member_Price__c;
+            pbs.TREX1__Legacy_Id__c = sp.Id;
             lstPbs.add(pbs);
         }
         Database.insert(lstPbs, true, AccessLevel.USER_MODE);
 
         // Return products
         return lstProducts;
-    }
-
-    private TREX1__Price_Level__c getNewPriceLevel(
-        TREX1__Product__c product,
-        String priceType
-    ) {
-        Staged_Program__c sp = mapProdKeyToStagedProgram.get(product.Key__c);
-        TREX1__Session__c session = sessions.get(sp.Session__c);
-        Id adminGlAccountId = sp.Location__r.Name == LOCATION_BPC 
-            ? session.BPC_Admin_GL_Account__c 
-            : session.UES_Admin_GL_Account__c;
-
-        TREX1__Price_Level__c pl = new TREX1__Price_Level__c();
-        pl.Name = product.Name + ' ' + priceType;
-        pl.RecordTypeId = priceLevelRecordTypeId;
-        pl.TREX1__Product__c = product.Id;
-        pl.TREX1__Price_Type__c = priceType;
-        pl.Initial_Fee_is_Administrative__c = true;
-        pl.TREX1__Deposit_Fee_Revenue_Recognition_Policy__c = 'On Transaction Firmed';
-        pl.TREX1__Initial_Fee_Revenue_Recognition_Policy__c = 'On Transaction Firmed';
-        pl.TREX1__Recurring_Revenue_Recognition_Policy__c = 'On Start Date';
-        pl.TREX1__GL_Account_Deposit_Fee_Primary__c = sp.GL_Account__c;
-        pl.TREX1__GL_Account_Initial_Fee_Primary__c = adminGlAccountId;
-        pl.TREX1__GL_Account_Initial_Fee_Secondary__c = adminGlAccountId;
-        pl.TREX1__GL_Account_Recurring_Fee_Primary__c = sp.GL_Account__c;
-        pl.TREX1__GL_Account_Recurring_Fee_Secondary__c = sp.GL_Account__c;
-        pl.TREX1__GL_Percent_Initial_Fee_Primary__c = 100;
-        pl.TREX1__GL_Percent_Initial_Fee_Secondary__c = 0;
-        pl.TREX1__GL_Percent_Recurring_Fee_Primary__c = 100;
-        pl.TREX1__GL_Percent_Recurring_Fee_Secondary__c = 0;
-        pl.TREX1__Include_Price_In_Public_Description__c = true;
-
-        return pl;
     }
 
     /**
@@ -176,7 +162,7 @@ public with sharing class ProgramGeneratorService {
     private Map<String, TREX1__Course_Session__c> getCourseSessionMap() {
         // Get existing course sessions from course session keys
         mapCsKeyToStagedProgram = new Map<String, Staged_Program__c>();
-        for (Staged_Program__c sp : stagedPrograms) {
+        for (Staged_Program__c sp : stagedPrograms.values()) {
             mapCsKeyToStagedProgram.put(sp.Course_Session_Key__c, sp);
         }
         for (TREX1__Course_Session__c cs : queryForCourseSessions(mapCsKeyToStagedProgram.keySet())) {
@@ -256,6 +242,45 @@ public with sharing class ProgramGeneratorService {
     }
 
     /**
+     * Returns a single price level sobject for a given produce and price type
+     */
+    private TREX1__Price_Level__c getNewPriceLevel(
+        TREX1__Product__c product,
+        String priceType
+    ) {
+        Staged_Program__c sp = mapProdKeyToStagedProgram.get(product.Key__c);
+        TREX1__Session__c session = sessions.get(sp.Session__c);
+        Id adminGlAccountId = sp.Location__r.Name == LOCATION_BPC 
+            ? session.BPC_Admin_GL_Account__c 
+            : session.UES_Admin_GL_Account__c;
+
+        TREX1__Price_Level__c pl = new TREX1__Price_Level__c();
+        pl.Name = product.Name + ' ' + priceType;
+        pl.RecordTypeId = priceLevelRecordTypeId;
+        pl.TREX1__Product__c = product.Id;
+        pl.TREX1__Price_Type__c = priceType;
+        pl.Initial_Fee_is_Administrative__c = true;
+        pl.TREX1__Initial_Fee_Amount__c = INITIAL_FEE_AMOUNT;
+        pl.TREX1__Deposit_Fee_Revenue_Recognition_Policy__c = 'On Transaction Firmed';
+        pl.TREX1__Initial_Fee_Revenue_Recognition_Policy__c = 'On Transaction Firmed';
+        pl.TREX1__Recurring_Revenue_Recognition_Policy__c = 'On Start Date';
+        pl.TREX1__GL_Account_Deposit_Fee_Primary__c = sp.GL_Account__c;
+        pl.TREX1__GL_Account_Initial_Fee_Primary__c = adminGlAccountId;
+        pl.TREX1__GL_Account_Initial_Fee_Secondary__c = adminGlAccountId;
+        pl.TREX1__GL_Account_Recurring_Fee_Primary__c = sp.GL_Account__c;
+        pl.TREX1__GL_Account_Recurring_Fee_Secondary__c = sp.GL_Account__c;
+        pl.TREX1__GL_Percent_Initial_Fee_Primary__c = 100;
+        pl.TREX1__GL_Percent_Initial_Fee_Secondary__c = 0;
+        pl.TREX1__GL_Percent_Recurring_Fee_Primary__c = 100;
+        pl.TREX1__GL_Percent_Recurring_Fee_Secondary__c = 0;
+        pl.TREX1__Include_Price_In_Public_Description__c = true;
+
+        pl.TREX1__Legacy_Id__c = sp.Id;
+
+        return pl;
+    }
+
+    /**
      * Query for existing course sessions records based on a set of course session keys
      */
     private List<TREX1__Course_Session__c> queryForCourseSessions(
@@ -298,7 +323,7 @@ public with sharing class ProgramGeneratorService {
     private Map<Id, TREX1__Session__c> getSessionMap() {
         if (sessions == null) {
             Set<Id> setSessionIds = new Set<Id>();
-            for (Staged_Program__c sp : stagedPrograms) {
+            for (Staged_Program__c sp : stagedPrograms.values()) {
                 setSessionIds.add(sp.Session__c);
             }
             sessions = new Map<Id, TREX1__Session__c>([
@@ -333,10 +358,10 @@ public with sharing class ProgramGeneratorService {
     /**
      * Query for staged program details
      */
-    private List<Staged_Program__c> queryForStagedPrograms(
+    private Map<Id, Staged_Program__c> queryForStagedPrograms(
         Set<Id> stagedProgramIds
     ) {
-        return [
+        return new Map<Id, Staged_Program__c>([
             SELECT Id,
                    Status__c,
                    Error_Message__c,
@@ -372,7 +397,20 @@ public with sharing class ProgramGeneratorService {
              WHERE Id IN :stagedProgramIds
               WITH USER_MODE
              LIMIT 200
-        ];
+        ]);
+    }
+
+    /**
+     * Caches and returns cached gbg id
+     */
+    private static Id getGlobalBillingGroupId() {
+        if (gbgId == null) {
+            List<TREX1__Global_Billing_Group__c> lstGbgs = [
+                SELECT Id FROM TREX1__Global_Billing_Group__c WHERE Name = :GBG_NAME WITH USER_MODE LIMIT 1
+            ];
+            gbgId = lstGbgs[0].Id;
+        }
+        return gbgId;
     }
 
 }
