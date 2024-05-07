@@ -10,6 +10,7 @@
   ISBLANK( Course__c ),
   ISBLANK( Course_Session_Name__c ),
   ISBLANK( Course_Option_Name__c ),
+  ISBLANK( Session__c ),
   ISBLANK( Days_of_Week__c ),
   ISBLANK( Start_Date__c ),
   ISBLANK( End_Date__c ),
