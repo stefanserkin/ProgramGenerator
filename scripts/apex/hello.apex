@@ -5,9 +5,10 @@
 // You can also execute the entire file by running the command:
 //     SFDX: Execute Anonymous Apex with Editor Contents
 
-ProgramGeneratorService pgs = new ProgramGeneratorService(
-    new Set<Id>{ 'a6oVB0000000km1YAA' }
-);
+Set<Id> setIds = new Set<Id>();
+for (Staged_Program__c sp : [SELECT Id FROM Staged_Program__c WHERE Status__c = 'Staged']) {
+    setIds.add(sp.Id);
+}
+ProgramGeneratorService pgs = new ProgramGeneratorService(setIds);
 
 pgs.run();
-System.debug(':::: ran service');

@@ -312,7 +312,7 @@ public with sharing class ProgramGeneratorService {
         List<TREX1__Product__c> lstProducts = new List<TREX1__Product__c>();
         for (Staged_Program__c sp : lstStagedPrograms) {
             TREX1__Product__c prod = new TREX1__Product__c();
-            prod.Name = sp.GL_Account__r.Name + ' - ' + sp.Public_Price__c.format();
+            prod.Name = sp.GL_Account__r.Name.left(70) + ' - $' + sp.Public_Price__c.format();
             prod.Key__c = sp.Price_Level_Key__c;
             prod.TREX1__Global_Billing_Group__c = getGlobalBillingGroupId();
             prod.TREX1__Price_Description_Override__c = true;
