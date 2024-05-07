@@ -317,8 +317,8 @@ public with sharing class ProgramGeneratorService {
             prod.TREX1__Global_Billing_Group__c = getGlobalBillingGroupId();
             prod.TREX1__Price_Description_Override__c = true;
             prod.TREX1__Price_Description__c = sp.Has_Member_Price__c
-                ? 'Public ' + sp.Public_Price__c.format() + '/Member ' + sp.Member_Price__c.format()
-                : sp.Public_Price__c.format();
+                ? 'Public $' + sp.Public_Price__c.format() + '/Member $' + sp.Member_Price__c.format()
+                : '$' + sp.Public_Price__c.format();
             prod.TREX1__Billing_Cancellation_Credit_Setting__c = 'Active Days Prorated Credit';
             prod.NonMemberPrice__c = sp.Public_Price__c;
             prod.TREX1__Allow_Multiple__c = true;
