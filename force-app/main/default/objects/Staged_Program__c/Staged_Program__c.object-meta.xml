@@ -162,7 +162,14 @@
         <type>AutoNumber</type>
     </nameField>
     <pluralLabel>Staged Programs</pluralLabel>
-    <searchLayouts></searchLayouts>
+    <searchLayouts>
+        <searchResultsAdditionalFields>Program__c</searchResultsAdditionalFields>
+        <searchResultsAdditionalFields>Course__c</searchResultsAdditionalFields>
+        <searchResultsAdditionalFields>Status__c</searchResultsAdditionalFields>
+        <searchResultsAdditionalFields>Session__c</searchResultsAdditionalFields>
+        <searchResultsAdditionalFields>Course_Session__c</searchResultsAdditionalFields>
+        <searchResultsAdditionalFields>Course_Option__c</searchResultsAdditionalFields>
+    </searchLayouts>
     <sharingModel>ReadWrite</sharingModel>
     <visibility>Public</visibility>
 </CustomObject>
