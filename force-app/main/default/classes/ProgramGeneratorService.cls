@@ -57,36 +57,28 @@ public with sharing class ProgramGeneratorService {
      * @returns void
      */
     public void run() {
-        try {
-            // Get map of course sessions
-            System.debug(':::: Getting course session map');
-            Map<String, TREX1__Course_Session__c> mapCourseSessions = getCourseSessionMap();
-    
-            // Get map of products
-            System.debug(':::: Getting product map');
-            Map<String, TREX1__Product__c> mapProducts = getProductMap();
-    
-            // Create course options
-            System.debug(':::: Creating course options');
-            List<TREX1__Course_Option__c> lstCos = createCourseOptions();
-    
-            // Update staged programs
-            System.debug(':::: Updating staged programs');
-            List<Staged_Program__c> lstStagedProgramsToUpdate = new List<Staged_Program__c>();
-            for (Staged_Program__c sp : stagedPrograms.values()) {
-                lstStagedProgramsToUpdate.add(
-                    new Staged_Program__c(
-                        Id = sp.Id,
-                        Status__c = STATUS_PROCESSED,
-                        Course_Session__c = courseSessions.get(sp.Course_Session_Key__c).Id,
-                        Course_Option__c = courseOptions.get(sp.Id).Id
-                    )
-                );
-            }
-            Database.update(lstStagedProgramsToUpdate, true, AccessLevel.USER_MODE);
-        } catch (Exception e) {
-            System.debug('::::: received exception --> ' + e.getMessage());
+        // Get map of course sessions
+        Map<String, TREX1__Course_Session__c> mapCourseSessions = getCourseSessionMap();
+
+        // Get map of products
+        Map<String, TREX1__Product__c> mapProducts = getProductMap();
+
+        // Create course options
+        List<TREX1__Course_Option__c> lstCos = createCourseOptions();
+
+        // Update staged programs
+        List<Staged_Program__c> lstStagedProgramsToUpdate = new List<Staged_Program__c>();
+        for (Staged_Program__c sp : stagedPrograms.values()) {
+            lstStagedProgramsToUpdate.add(
+                new Staged_Program__c(
+                    Id = sp.Id,
+                    Status__c = STATUS_PROCESSED,
+                    Course_Session__c = courseSessions.get(sp.Course_Session_Key__c).Id,
+                    Course_Option__c = courseOptions.get(sp.Id).Id
+                )
+            );
         }
+        Database.update(lstStagedProgramsToUpdate, true, AccessLevel.USER_MODE);
     }
 
     /**
@@ -123,39 +115,26 @@ public with sharing class ProgramGeneratorService {
      * Get a map of products with non-member price level by price level key
      */
     private Map<String, TREX1__Product__c> getProductMap() {
-        System.debug(':::: Entered get product map');
         // Get existing products for price level keys
         mapProdKeyToStagedProgram = new Map<String, Staged_Program__c>();
         for (Staged_Program__c sp : stagedPrograms.values()) {
             mapProdKeyToStagedProgram.put(sp.Price_Level_Key__c, sp);
         }
-        System.debug(':::: Populated mapProdKeyToStagedProgram map ');
         for (TREX1__Product__c prod : queryForProducts(mapProdKeyToStagedProgram.keySet())) {
             products.put(prod.TREX1__Price_Levels__r[0].Key__c, prod);
         }
-        System.debug(':::: Populated products map with existing products');
 
         // Create new products, price levels, and pbs
         Map<String, Staged_Program__c> mapSpsWithNewProds = new Map<String, Staged_Program__c>();
         for (String prodKey : mapProdKeyToStagedProgram.keySet()) {
             if (!products.containsKey(prodKey)) {
-                if (!mapProdKeyToStagedProgram.containsKey(prodKey)) {
-                    System.debug(':::: NO KEY!');
-                    System.debug(':::: prodKey --> ' + prodKey);
-                    System.debug(':::: mapProdKeyToStagedProgram --> ' + mapProdKeyToStagedProgram);
-                    for (String val : mapProdKeyToStagedProgram.keySet()) {
-                        System.debug(':::: entry --> ' + val);
-                    }
-                }
                 mapSpsWithNewProds.put(
                     prodKey, 
                     mapProdKeyToStagedProgram.get(prodKey)
                 );
             }
         }
-        System.debug(':::: Ready to create new products');
         List<TREX1__Product__c> lstNewProducts = createNewProducts(mapSpsWithNewProds.values());
-        System.debug(':::: Adding new products to product map');
         for (TREX1__Product__c newProd : lstNewProducts) {
             products.put(newProd.Key__c, newProd);
         }
@@ -330,7 +309,6 @@ public with sharing class ProgramGeneratorService {
         List<Staged_Program__c> lstStagedPrograms
     ) {
         // Products
-        System.debug(':::: Adding products');
         List<TREX1__Product__c> lstProducts = new List<TREX1__Product__c>();
         for (Staged_Program__c sp : lstStagedPrograms) {
             TREX1__Product__c prod = new TREX1__Product__c();
@@ -352,7 +330,6 @@ public with sharing class ProgramGeneratorService {
         Database.insert(lstProducts, true, AccessLevel.USER_MODE);
 
         // Price Levels
-        System.debug(':::: Adding price levels');
         List<TREX1__Price_Level__c> lstPriceLevels = new List<TREX1__Price_Level__c>();
         for (TREX1__Product__c prod : lstProducts) {
             lstPriceLevels.add( getNewPriceLevel(prod, PRICE_TYPE_PUBLIC) );
@@ -363,7 +340,6 @@ public with sharing class ProgramGeneratorService {
         Database.insert(lstPriceLevels, true, AccessLevel.USER_MODE);
 
         // Planned Billing Schedules
-        System.debug(':::: Adding pbs');
         List<TREX1__Planned_Billing_Schedule__c> lstPbs = new List<TREX1__Planned_Billing_Schedule__c>();
         for (TREX1__Price_Level__c pl : lstPriceLevels) {
             Staged_Program__c sp = stagedPrograms.get(pl.TREX1__Legacy_Id__c);
@@ -393,11 +369,8 @@ public with sharing class ProgramGeneratorService {
         TREX1__Product__c product,
         String priceType
     ) {
-        System.debug(':::: Getting new price level for price type --> ' + priceType);
         Staged_Program__c sp = mapProdKeyToStagedProgram.get(product.Key__c);
-        System.debug(':::: Getting session');
         TREX1__Session__c session = getSessionMap().get(sp.Session__c);
-        System.debug(':::: Getting admin gl account');
         Id adminGlAccountId = sp.Location__r.Name == LOCATION_BPC 
             ? session.BPC_Admin_GL_Account__c 
             : session.UES_Admin_GL_Account__c;
