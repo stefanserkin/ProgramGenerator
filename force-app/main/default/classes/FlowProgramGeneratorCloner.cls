@@ -8,7 +8,6 @@ public with sharing class FlowProgramGeneratorCloner {
         List<Result> results = new List<Result>();
         for (Request request : requests) {
             System.debug(':::: request --> ' + request);
-            // Set<Id> csoIds = new Set<Id>(request.courseSessionOptionIds);
             ProgramGeneratorCloner cloner = new ProgramGeneratorCloner(request);
 
             Result result = new Result();
@@ -19,12 +18,14 @@ public with sharing class FlowProgramGeneratorCloner {
     }
     
     public class Request {
-        @InvocableVariable(label='Course Session Option IDs' required=true)
-        public List<Id> courseSessionOptionIds;
+        @InvocableVariable(label='Staged Program Batch ID' required=true)
+        public Id batchId;
         @InvocableVariable(description='Original Session' required=true)
         public Id originalSessionId;
         @InvocableVariable(description='Target Session' required=true)
         public Id targetSessionId;
+        @InvocableVariable(label='Course Session Option IDs' required=true)
+        public List<Id> courseSessionOptionIds;
         @InvocableVariable(description='Days to Add' required=true)
         public Integer daysToAdd;
     }

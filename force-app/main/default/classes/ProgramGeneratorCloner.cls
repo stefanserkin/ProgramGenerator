@@ -4,14 +4,15 @@
 public with sharing class ProgramGeneratorCloner {
 
     private static final String STATUS_DRAFT = 'Draft';
-    private static final String PRICE_TYPE = 'Member';
+    private static final String PRICE_TYPE_MEMBER = 'Member';
     private static final Integer QUERY_LIMIT = 10000;
 
     private Map<Id, TREX1__Price_Level__c> productIdToPriceLevelMap;
 
-    private List<TREX1__Course_Session_Option__c> courseSessionOptions;
+    private Id batchId;
     private Id originalSessionId;
     private Id targetSessionId;
+    private List<TREX1__Course_Session_Option__c> courseSessionOptions;
     private Integer daysToAdd;
 
     private TREX1__Session__c originalSession;
@@ -19,14 +20,22 @@ public with sharing class ProgramGeneratorCloner {
 
     public ProgramGeneratorCloner(FlowProgramGeneratorCloner.Request request) {
         this(
-            new Set<Id>(request.courseSessionOptionIds),
+            request.batchId,
             request.originalSessionId,
-            request.targetSessionId
+            request.targetSessionId,
+            new Set<Id>(request.courseSessionOptionIds)
         );
         this.setDaysToAdd(request.daysToAdd);
+        System.debug(':::: received request --> ' + request);
     }
 
-    public ProgramGeneratorCloner(Set<Id> courseSessionOptionIds, Id originalSessionId, Id targetSessionId) {
+    public ProgramGeneratorCloner(
+        Id batchId, 
+        Id originalSessionId, 
+        Id targetSessionId,
+        Set<Id> courseSessionOptionIds
+    ) {
+        this.batchId = batchId;
         this.courseSessionOptions = queryForCourseSessionOptions(courseSessionOptionIds);
         this.originalSessionId = originalSessionId;
         this.targetSessionId = targetSessionId;
@@ -66,7 +75,9 @@ public with sharing class ProgramGeneratorCloner {
 
     private Staged_Program__c createStagedProgramFromCSO(TREX1__Course_Session_Option__c cso) {
         Staged_Program__c stagedProgram = new Staged_Program__c();
+        stagedProgram.Staged_Program_Batch__c = this.batchId;
         stagedProgram.Status__c = STATUS_DRAFT;
+        stagedProgram.Source_Course_Session_Option__c = cso.Id;
         stagedProgram.Program__c = cso.TREX1__Course_Session__r.TREX1__Course__r.TREX1__Program__c;
         stagedProgram.Program_Name__c = cso.TREX1__Course_Session__r.TREX1__Course__r.TREX1__Program__r.Name;
         stagedProgram.Course_Name__c = cso.TREX1__Course_Session__r.TREX1__Course__r.Name;
@@ -93,10 +104,13 @@ public with sharing class ProgramGeneratorCloner {
 
         // Pricing
         TREX1__Price_Level__c priceLevel = getPriceLevelMap().get(cso.TREX1__Course_Option__r.TREX1__Product__c);
-        stagedProgram.Public_Price__c = priceLevel.TREX1__Total_Billing_Schedule_Amount__c;
-        stagedProgram.Has_Member_Price__c = true;
-        stagedProgram.GL_Account_Number__c = priceLevel.TREX1__GL_Account_Recurring_Fee_Primary__r.TREX1__GL_Account_Number__c;
-        stagedProgram.GL_Account__c = priceLevel.TREX1__GL_Account_Recurring_Fee_Primary__c;
+        if (priceLevel != null) {
+            System.debug('::: priceLevel --> ' + priceLevel);
+            stagedProgram.Public_Price__c = priceLevel.TREX1__Total_Billing_Schedule_Amount__c;
+            stagedProgram.Has_Member_Price__c = true;
+            stagedProgram.GL_Account_Number__c = priceLevel.TREX1__GL_Account_Recurring_Fee_Primary__r.TREX1__GL_Account_Number__c;
+            stagedProgram.GL_Account__c = priceLevel.TREX1__GL_Account_Recurring_Fee_Primary__c;    
+        }
 
         stagedProgram.Course_Option_Code__c = getUpdatedCourseOptionCode(cso.TREX1__Course_Option__r.TREX1__Code__c);
 
@@ -127,6 +141,7 @@ public with sharing class ProgramGeneratorCloner {
     }
 
     private List<TREX1__Price_Level__c> queryForPriceLevels() {
+        Set<Id> productIds = getProductIds();
         return [
             SELECT Id, 
                    TREX1__Product__c, 
@@ -134,8 +149,8 @@ public with sharing class ProgramGeneratorCloner {
                    TREX1__GL_Account_Recurring_Fee_Primary__c, 
                    TREX1__GL_Account_Recurring_Fee_Primary__r.TREX1__GL_Account_Number__c
               FROM TREX1__Price_Level__c
-             WHERE TREX1__Product__c IN :getProductIds()
-               AND TREX1__Price_Type__c = :PRICE_TYPE
+             WHERE TREX1__Product__c IN :productIds
+               AND TREX1__Price_Type__c != :PRICE_TYPE_MEMBER
               WITH USER_MODE
              LIMIT :QUERY_LIMIT
         ];

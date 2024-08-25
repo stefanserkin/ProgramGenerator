@@ -1,5 +1,5 @@
 <template>
-    <div>
+    <div class="slds-var-m-vertical_medium">
         <lightning-input 
             type="number" 
             name="daysToAdd" 
@@ -11,7 +11,7 @@
             onchange={handleDaysToAddChange}
         ></lightning-input>
     </div>
-    <div>
+    <div lwc:if={courseOption} class="slds-var-m-bottom_medium">
         <p>{exampleMessage}</p>
     </div>
 </template>

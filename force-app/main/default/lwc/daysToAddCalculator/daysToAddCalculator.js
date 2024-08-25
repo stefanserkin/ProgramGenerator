@@ -20,8 +20,6 @@ export default class DaysToAddCalculator extends LightningElement {
         if (result.data) {
             this.courseOption = JSON.parse( JSON.stringify(result.data) );
             this.oldStartDate = new Date(this.courseOption.TREX1__Start_Date__c);
-            console.log(JSON.stringify(this.courseOption));
-            console.log(this.oldStartDate);
             this.error = undefined;
         } else if (result.error) {
             this.courseOption = undefined;
@@ -49,7 +47,6 @@ export default class DaysToAddCalculator extends LightningElement {
     }
 
     handleDaysToAddChange(event) {
-        console.log('handle num days change --> ', event.detail.value);
         this.daysToAdd = event.detail.value;
     }
 
