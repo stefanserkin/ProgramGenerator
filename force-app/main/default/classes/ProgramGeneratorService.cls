@@ -2,6 +2,7 @@ public with sharing class ProgramGeneratorService {
 
     private static final String STATUS_STAGED = 'Staged';
     private static final String STATUS_PROCESSED = 'Processed';
+    private static final String STATUS_FAILED = 'Processed with Errors';
     private static final String LOCATION_BPC = 'Battery Park City';
     private static final String LOCATION_UES = 'Upper East Side';
     private static final String NEW_COURSE_SESSION_STATUS = 'Draft';
@@ -27,14 +28,9 @@ public with sharing class ProgramGeneratorService {
     private Map<String, TREX1__Course_Session__c> courseSessions = new Map<String, TREX1__Course_Session__c>();
     private Map<String, TREX1__Course_Option__c> courseOptions = new Map<String, TREX1__Course_Option__c>();
     private Map<String, TREX1__Product__c> products = new Map<String, TREX1__Product__c>();
-
-    // Utility maps
     private Map<String, Staged_Program__c> mapProdKeyToStagedProgram;
     private Map<String, Staged_Program__c> mapCsKeyToStagedProgram;
 
-    /**
-     * Record types
-     */
     private static Id productRecordTypeId = Schema.SObjectType.TREX1__Product__c
         .getRecordTypeInfosByDeveloperName().get(RECORD_TYPE_PRODUCT).getRecordTypeId();
 
@@ -44,9 +40,7 @@ public with sharing class ProgramGeneratorService {
     private static Id pbsRecordTypeId = Schema.SObjectType.TREX1__Planned_Billing_Schedule__c
         .getRecordTypeInfosByDeveloperName().get(RECORD_TYPE_PBS).getRecordTypeId();
 
-    /**
-     * Constructor
-     */
+
     public ProgramGeneratorService(Set<Id> stagedProgramIds) {
         this.stagedPrograms = queryForStagedPrograms(stagedProgramIds);
     }
@@ -57,28 +51,32 @@ public with sharing class ProgramGeneratorService {
      * @returns void
      */
     public void run() {
-        // Get map of course sessions
-        Map<String, TREX1__Course_Session__c> mapCourseSessions = getCourseSessionMap();
+        try {
+            // Get map of course sessions
+            Map<String, TREX1__Course_Session__c> mapCourseSessions = getCourseSessionMap();
 
-        // Get map of products
-        Map<String, TREX1__Product__c> mapProducts = getProductMap();
+            // Get map of products
+            Map<String, TREX1__Product__c> mapProducts = getProductMap();
 
-        // Create course options
-        List<TREX1__Course_Option__c> lstCos = createCourseOptions();
+            // Create course options
+            List<TREX1__Course_Option__c> lstCos = createCourseOptions();
 
-        // Update staged programs
-        List<Staged_Program__c> lstStagedProgramsToUpdate = new List<Staged_Program__c>();
-        for (Staged_Program__c sp : stagedPrograms.values()) {
-            lstStagedProgramsToUpdate.add(
-                new Staged_Program__c(
-                    Id = sp.Id,
-                    Status__c = STATUS_PROCESSED,
-                    Course_Session__c = courseSessions.get(sp.Course_Session_Key__c).Id,
-                    Course_Option__c = courseOptions.get(sp.Id).Id
-                )
-            );
+            // Update staged programs
+            List<Staged_Program__c> lstStagedProgramsToUpdate = new List<Staged_Program__c>();
+            for (Staged_Program__c sp : stagedPrograms.values()) {
+                lstStagedProgramsToUpdate.add(
+                    new Staged_Program__c(
+                        Id = sp.Id,
+                        Status__c = STATUS_PROCESSED,
+                        Course_Session__c = courseSessions.get(sp.Course_Session_Key__c).Id,
+                        Course_Option__c = courseOptions.get(sp.Id).Id
+                    )
+                );
+            }
+            Database.update(lstStagedProgramsToUpdate, true, AccessLevel.USER_MODE);
+        } catch (Exception e) {
+            throw e;
         }
-        Database.update(lstStagedProgramsToUpdate, true, AccessLevel.USER_MODE);
     }
 
     /**
@@ -209,7 +207,7 @@ public with sharing class ProgramGeneratorService {
             TREX1__Session__c session = getSessionMap().get(sp.Session__c);
 
             TREX1__Course_Option__c co = new TREX1__Course_Option__c();
-            co.Name = sp.Course_Option_Name__c;
+            co.Name = sp.Course_Option_Name__c.left(80);
             co.TREX1__Code__c = sp.Course_Option_Code__c;
             co.TREX1__Type__c = COURSE_OPTION_TYPE;
             co.Approval_Status__c = COURSE_OPTION_APPROVAL_STATUS;
@@ -312,7 +310,7 @@ public with sharing class ProgramGeneratorService {
         List<TREX1__Product__c> lstProducts = new List<TREX1__Product__c>();
         for (Staged_Program__c sp : lstStagedPrograms) {
             TREX1__Product__c prod = new TREX1__Product__c();
-            prod.Name = sp.GL_Account__r.Name.left(70) + ' - $' + sp.Public_Price__c.format();
+            prod.Name = sp.GL_Account__r.Name.left(60) + ' - $' + sp.Public_Price__c.format();
             prod.RecordTypeId = productRecordTypeId;
             prod.Key__c = sp.Price_Level_Key__c;
             prod.TREX1__Global_Billing_Group__c = getGlobalBillingGroupId();
@@ -376,7 +374,7 @@ public with sharing class ProgramGeneratorService {
             : session.UES_Admin_GL_Account__c;
 
         TREX1__Price_Level__c pl = new TREX1__Price_Level__c();
-        pl.Name = product.Name + ' ' + priceType;
+        pl.Name = product.Name.left(69) + ' ' + priceType;
         pl.RecordTypeId = priceLevelRecordTypeId;
         pl.TREX1__Product__c = product.Id;
         pl.TREX1__Price_Type__c = priceType;

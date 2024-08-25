@@ -82,10 +82,10 @@ public with sharing class ProgramGeneratorCloner {
         stagedProgram.Program_Name__c = cso.TREX1__Course_Session__r.TREX1__Course__r.TREX1__Program__r.Name;
         stagedProgram.Course_Name__c = cso.TREX1__Course_Session__r.TREX1__Course__r.Name;
         stagedProgram.Course__c = cso.TREX1__Course_Session__r.TREX1__Course__c;
-        stagedProgram.Session__c = cso.TREX1__Course_Session__r.TREX1__Session__c;
+        stagedProgram.Session__c = targetSessionId;
         stagedProgram.Session_Name__c = cso.TREX1__Course_Session__r.TREX1__Session__r.Name;
-        stagedProgram.Course_Session_Name__c = cso.TREX1__Course_Session__r.Name;
-        stagedProgram.Course_Option_Name__c = cso.TREX1__Course_Option__r.Name;
+        stagedProgram.Course_Session_Name__c = replaceSessionInfo(cso.TREX1__Course_Session__r.Name);
+        stagedProgram.Course_Option_Name__c = replaceSessionInfo(cso.TREX1__Course_Option__r.Name);
         stagedProgram.Days_of_Week__c = cso.TREX1__Course_Option__r.TREX1__Day_of_Week__c;
         stagedProgram.Start_Date__c = cso.TREX1__Course_Option__r.TREX1__Start_Date__c.addDays(this.daysToAdd);
         stagedProgram.End_Date__c = cso.TREX1__Course_Option__r.TREX1__End_Date__c.addDays(this.daysToAdd);
@@ -112,17 +112,17 @@ public with sharing class ProgramGeneratorCloner {
             stagedProgram.GL_Account__c = priceLevel.TREX1__GL_Account_Recurring_Fee_Primary__c;    
         }
 
-        stagedProgram.Course_Option_Code__c = getUpdatedCourseOptionCode(cso.TREX1__Course_Option__r.TREX1__Code__c);
+        stagedProgram.Course_Option_Code__c = replaceSessionInfo(cso.TREX1__Course_Option__r.TREX1__Code__c);
 
         return stagedProgram;
     }
 
-    private String getUpdatedCourseOptionCode(String originalCode) {
-        String targetCode = '';
-        if (!String.isBlank(originalCode)) {
-            targetCode = originalCode.replace(originalSession.Session_Code__c, targetSession.Session_Code__c);
+    private String replaceSessionInfo(String originalString) {
+        String result = '';
+        if (!String.isBlank(originalString)) {
+            result = originalString.replaceAll(originalSession.Session_Code__c, targetSession.Session_Code__c).replaceAll(originalSession.Name, targetSession.Name);
         }
-        return targetCode;
+        return result;
     }
 
     private List<Staged_Program__c> insertStagedPrograms(List<Staged_Program__c> stagedPrograms) {
