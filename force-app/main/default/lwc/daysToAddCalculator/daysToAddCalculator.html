@@ -1,0 +1,17 @@
+<template>
+    <div>
+        <lightning-input 
+            type="number" 
+            name="daysToAdd" 
+            value={daysToAdd} 
+            label="Days to Add" 
+            step="1" 
+            max="10000"
+            required 
+            onchange={handleDaysToAddChange}
+        ></lightning-input>
+    </div>
+    <div>
+        <p>{exampleMessage}</p>
+    </div>
+</template>
