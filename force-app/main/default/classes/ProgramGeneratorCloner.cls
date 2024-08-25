@@ -4,22 +4,56 @@
 public with sharing class ProgramGeneratorCloner {
 
     private static final String STATUS_DRAFT = 'Draft';
+    private static final String PRICE_TYPE = 'Member';
     private static final Integer QUERY_LIMIT = 10000;
 
-    private List<TREX1__Course_Session_Option__c> courseSessionOptions;
     private Map<Id, TREX1__Price_Level__c> productIdToPriceLevelMap;
 
-    public ProgramGeneratorCloner(Set<Id> courseSessionOptionIds) {
+    private List<TREX1__Course_Session_Option__c> courseSessionOptions;
+    private Id originalSessionId;
+    private Id targetSessionId;
+    private Integer daysToAdd;
+
+    private TREX1__Session__c originalSession;
+    private TREX1__Session__c targetSession;
+
+    public ProgramGeneratorCloner(FlowProgramGeneratorCloner.Request request) {
+        this(
+            new Set<Id>(request.courseSessionOptionIds),
+            request.originalSessionId,
+            request.targetSessionId
+        );
+        this.setDaysToAdd(request.daysToAdd);
+    }
+
+    public ProgramGeneratorCloner(Set<Id> courseSessionOptionIds, Id originalSessionId, Id targetSessionId) {
         this.courseSessionOptions = queryForCourseSessionOptions(courseSessionOptionIds);
+        this.originalSessionId = originalSessionId;
+        this.targetSessionId = targetSessionId;
+        this.setSessions();
+    }
+
+    public void setDaysToAdd(Integer daysToAdd) {
+        this.daysToAdd = daysToAdd;
+    }
+
+    private void setSessions() {
+        for (TREX1__Session__c session : [SELECT Id, Name, Session_Code__c
+                                            FROM TREX1__Session__c
+                                           WHERE Id IN (:this.originalSessionId, :this.targetSessionId)
+                                            WITH USER_MODE
+                                           LIMIT 2]) 
+        {
+            if (session.Id == this.originalSessionId) {
+                this.originalSession = session;
+            } else {
+                this.targetSession = session;
+            }
+        }
     }
 
     public List<Staged_Program__c> createStagedPrograms() {
         return insertStagedPrograms( createStagedProgramsFromCSOs() );
-    }
-
-    private List<Staged_Program__c> insertStagedPrograms(List<Staged_Program__c> stagedPrograms) {
-        Database.insert(stagedPrograms, AccessLevel.USER_MODE);
-        return stagedPrograms;
     }
 
     private List<Staged_Program__c> createStagedProgramsFromCSOs() {
@@ -42,11 +76,11 @@ public with sharing class ProgramGeneratorCloner {
         stagedProgram.Course_Session_Name__c = cso.TREX1__Course_Session__r.Name;
         stagedProgram.Course_Option_Name__c = cso.TREX1__Course_Option__r.Name;
         stagedProgram.Days_of_Week__c = cso.TREX1__Course_Option__r.TREX1__Day_of_Week__c;
-        stagedProgram.Start_Date__c = cso.TREX1__Course_Option__r.TREX1__Start_Date__c;
-        stagedProgram.End_Date__c = cso.TREX1__Course_Option__r.TREX1__End_Date__c;
+        stagedProgram.Start_Date__c = cso.TREX1__Course_Option__r.TREX1__Start_Date__c.addDays(this.daysToAdd);
+        stagedProgram.End_Date__c = cso.TREX1__Course_Option__r.TREX1__End_Date__c.addDays(this.daysToAdd);
         stagedProgram.Start_Time__c = cso.TREX1__Course_Option__r.TREX1__Start_Time__c;
         stagedProgram.End_Time__c = cso.TREX1__Course_Option__r.TREX1__End_Time__c;
-        stagedProgram.Exception_Dates__c = cso.TREX1__Course_Option__r.Exception_Dates__c;
+        // stagedProgram.Exception_Dates__c = cso.TREX1__Course_Option__r.Exception_Dates__c;
         stagedProgram.Location__c = cso.TREX1__Course_Option__r.TREX1__Location__c;
         stagedProgram.Location_Name__c = cso.TREX1__Course_Option__r.TREX1__Location__r.Name;
         if (cso.TREX1__Course_Option__r.Primary_Facility__c != null) {
@@ -64,8 +98,22 @@ public with sharing class ProgramGeneratorCloner {
         stagedProgram.GL_Account_Number__c = priceLevel.TREX1__GL_Account_Recurring_Fee_Primary__r.TREX1__GL_Account_Number__c;
         stagedProgram.GL_Account__c = priceLevel.TREX1__GL_Account_Recurring_Fee_Primary__c;
 
-        // stagedProgram.Course_Option_Code__c;
+        stagedProgram.Course_Option_Code__c = getUpdatedCourseOptionCode(cso.TREX1__Course_Option__r.TREX1__Code__c);
+
         return stagedProgram;
+    }
+
+    private String getUpdatedCourseOptionCode(String originalCode) {
+        String targetCode = '';
+        if (!String.isBlank(originalCode)) {
+            targetCode = originalCode.replace(originalSession.Session_Code__c, targetSession.Session_Code__c);
+        }
+        return targetCode;
+    }
+
+    private List<Staged_Program__c> insertStagedPrograms(List<Staged_Program__c> stagedPrograms) {
+        Database.insert(stagedPrograms, AccessLevel.USER_MODE);
+        return stagedPrograms;
     }
 
     private Map<Id, TREX1__Price_Level__c> getPriceLevelMap() {
@@ -87,6 +135,7 @@ public with sharing class ProgramGeneratorCloner {
                    TREX1__GL_Account_Recurring_Fee_Primary__r.TREX1__GL_Account_Number__c
               FROM TREX1__Price_Level__c
              WHERE TREX1__Product__c IN :getProductIds()
+               AND TREX1__Price_Type__c = :PRICE_TYPE
               WITH USER_MODE
              LIMIT :QUERY_LIMIT
         ];

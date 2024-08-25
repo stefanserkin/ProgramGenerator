@@ -1,0 +1,12 @@
+<template>
+
+    <lightning-datatable
+        key-field="Id"
+        data={stagedPrograms}
+        columns={cols}
+        onsave={handleSave}
+        draft-values={draftValues}
+        onrowaction={handleRowActions}
+    ></lightning-datatable>
+    
+</template>

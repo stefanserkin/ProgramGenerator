@@ -1,0 +1,26 @@
+<template>
+    <lightning-card>
+        <template lwc:if={isLoading}>
+            <lightning-spinner alternative-text="Loading..." title="Loading..." size="medium" variant="base"></lightning-spinner>
+        </template>
+        <lightning-tabset variant="scoped">
+            <lightning-tab label="Stage">
+                Import staged programs.
+            </lightning-tab>
+            <lightning-tab label="Review">
+                <lightning-flow
+                    flow-api-name={reviewFlowName}
+                    flow-input-variables={inputVariables}
+                    flow-finish-behavior="NONE"
+                    onstatuschange={handleFlowStatusChange}
+                ></lightning-flow>
+            </lightning-tab>
+            <lightning-tab label="Import">
+                Import rec records.
+            </lightning-tab>
+            <lightning-tab label="Results">
+                Review Results
+            </lightning-tab>
+        </lightning-tabset>
+    </lightning-card>
+</template>

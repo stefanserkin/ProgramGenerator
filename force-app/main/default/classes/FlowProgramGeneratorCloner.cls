@@ -3,12 +3,13 @@
  ****************************************************/
 public with sharing class FlowProgramGeneratorCloner {
 
-    @InvocableMethod()
+    @InvocableMethod(label='Generate Staged Programs' category='Traction Rec')
     public static List<Result> createStagedPrograms(List<Request> requests) {
         List<Result> results = new List<Result>();
         for (Request request : requests) {
-            Set<Id> csoIds = new Set<Id>(request.courseSessionOptionIds);
-            ProgramGeneratorCloner cloner = new ProgramGeneratorCloner(csoIds);
+            System.debug(':::: request --> ' + request);
+            // Set<Id> csoIds = new Set<Id>(request.courseSessionOptionIds);
+            ProgramGeneratorCloner cloner = new ProgramGeneratorCloner(request);
 
             Result result = new Result();
             result.stagedPrograms = cloner.createStagedPrograms();
@@ -20,6 +21,12 @@ public with sharing class FlowProgramGeneratorCloner {
     public class Request {
         @InvocableVariable(label='Course Session Option IDs' required=true)
         public List<Id> courseSessionOptionIds;
+        @InvocableVariable(description='Original Session' required=true)
+        public Id originalSessionId;
+        @InvocableVariable(description='Target Session' required=true)
+        public Id targetSessionId;
+        @InvocableVariable(description='Days to Add' required=true)
+        public Integer daysToAdd;
     }
 
     public class Result {
