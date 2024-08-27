@@ -50,7 +50,7 @@ public with sharing class ProgramGeneratorService {
      * Processes staged programs provided in constructor
      * @returns void
      */
-    public void run() {
+    public List<TREX1__Course_Option__c> run() {
         try {
             // Get map of course sessions
             Map<String, TREX1__Course_Session__c> mapCourseSessions = getCourseSessionMap();
@@ -74,6 +74,8 @@ public with sharing class ProgramGeneratorService {
                 );
             }
             Database.update(lstStagedProgramsToUpdate, true, AccessLevel.USER_MODE);
+            
+            return lstCos;
         } catch (Exception e) {
             throw e;
         }

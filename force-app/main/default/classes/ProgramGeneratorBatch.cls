@@ -11,6 +11,7 @@ public with sharing class ProgramGeneratorBatch implements Database.Batchable<sO
 
     private Id stagedProgramBatchId;
     private Boolean isProcessing = false;
+    private List<TREX1__Course_Option__c> courseOptions;
 
     public ProgramGeneratorBatch(Id stagedProgramBatchId) {
         this.stagedProgramBatchId = stagedProgramBatchId;
@@ -26,13 +27,19 @@ public with sharing class ProgramGeneratorBatch implements Database.Batchable<sO
             this.isProcessing = true;
         }
 
+        if (this.courseOptions == null) {
+            this.courseOptions = new List<TREX1__Course_Option__c>();
+        }
+
         Set<Id> setStagedProgramIds = new Set<Id>();
         for (Staged_Program__c sp : lstStagedPrograms) {
             setStagedProgramIds.add(sp.Id);
         }
+
         ProgramGeneratorService service = new ProgramGeneratorService(setStagedProgramIds);
         try {
-            service.run();
+            List<TREX1__Course_Option__c> lstOptions = service.run();
+            this.courseOptions.addAll(lstOptions);
         } catch (Exception e) {
             Staged_Program_Batch__c spBatch = new Staged_Program_Batch__c();
             spBatch.Id = this.stagedProgramBatchId;
@@ -55,6 +62,11 @@ public with sharing class ProgramGeneratorBatch implements Database.Batchable<sO
             batch.Status__c = STATUS_COMPLETE;
             batch.Batch_Completed_Date_Time__c = System.now();
             Database.update(batch, AccessLevel.SYSTEM_MODE);
+        }
+
+        if (!this.courseOptions.isEmpty()) {
+            TRecCourseOptionBookingBatch bookingBatch = new TRecCourseOptionBookingBatch(this.courseOptions);
+            Database.executeBatch(bookingBatch, 50);
         }
 
         AsyncApexJob apexJob = [
