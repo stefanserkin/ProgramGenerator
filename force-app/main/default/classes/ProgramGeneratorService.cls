@@ -209,6 +209,7 @@ public with sharing class ProgramGeneratorService {
             TREX1__Session__c session = getSessionMap().get(sp.Session__c);
 
             TREX1__Course_Option__c co = new TREX1__Course_Option__c();
+            co.Staged_Program_Batch__c = sp.Staged_Program_Batch__c;
             co.Name = sp.Course_Option_Name__c.left(80);
             co.TREX1__Code__c = sp.Course_Option_Code__c;
             co.TREX1__Type__c = COURSE_OPTION_TYPE;
@@ -294,6 +295,7 @@ public with sharing class ProgramGeneratorService {
             newCso.TREX1__Course_Option__c = co.Id;
             newCso.TREX1__Option_Available__c = true;
             newCso.TREX1__Available_Online__c = true;
+            newCso.Staged_Program_Batch__c = co.Staged_Program_Batch__c;
             lstCsos.add(newCso);
             courseOptions.put(co.TREX1__Legacy_Id__c, co);
         }
@@ -484,6 +486,7 @@ public with sharing class ProgramGeneratorService {
     ) {
         return new Map<Id, Staged_Program__c>([
             SELECT Id,
+                   Staged_Program_Batch__c,
                    Status__c,
                    Error_Message__c,
                    Program__c,

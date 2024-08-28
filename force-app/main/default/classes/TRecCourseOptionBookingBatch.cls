@@ -1,11 +1,17 @@
-public with sharing class TRecCourseOptionBookingBatch implements Database.Batchable<sObject> {
+public with sharing class TRecCourseOptionBookingBatch implements Database.Batchable<sObject>, Database.Stateful {
 
     private static final String BATCH_NAME = 'TRecCourseOptionBookingBatch';
     
     private List<sObject> source;
+    private Id stagedProgramBatchId;
 
     public TRecCourseOptionBookingBatch(List<sObject> source) {
         this.source = source;
+    }
+
+    public TRecCourseOptionBookingBatch(List<sObject> source, Id stagedProgramBatchId) {
+        this.source = source;
+        this.stagedProgramBatchId = stagedProgramBatchId;
     }
 
     public Iterable<sObject> start(Database.BatchableContext BC) {
@@ -20,7 +26,10 @@ public with sharing class TRecCourseOptionBookingBatch implements Database.Batch
             courseOptionIds.add(co.Id);
         }
 
-        List<TREX1__Booking__c> lstBookings = TRecCourseOptionBookingHandler.createBookingsForCourseOptions(courseOptionIds);
+        List<TREX1__Booking__c> lstBookings = TRecCourseOptionBookingHandler.createBookingsForCourseOptions(
+            courseOptionIds,
+            this.stagedProgramBatchId
+        );
         insert lstBookings;
     }
 

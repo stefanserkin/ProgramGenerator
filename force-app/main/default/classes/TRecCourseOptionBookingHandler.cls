@@ -4,7 +4,8 @@ public with sharing class TRecCourseOptionBookingHandler {
         .getRecordTypeInfosByDeveloperName().get('Facility').getRecordTypeId();
     
     public static List<TREX1__Booking__c> createBookingsForCourseOptions(
-        Set<Id> courseOptionsIds
+        Set<Id> courseOptionsIds,
+        Id stagedProgramBatchId
     ) {
         List<TREX1__Booking__c> lstBookings = new List<TREX1__Booking__c>();
 
@@ -33,6 +34,9 @@ public with sharing class TRecCourseOptionBookingHandler {
                 bk.TREX1__Type__c = 'Course';
                 bk.TREX1__Setup_Time_Required__c = 0;
                 bk.TREX1__Tear_Down_Time_Required__c = 0;
+                if (stagedProgramBatchId != null) {
+                    bk.Staged_Program_Batch__c = stagedProgramBatchId;
+                }
                 lstBookings.add(bk);
             }
         }

@@ -65,7 +65,10 @@ public with sharing class ProgramGeneratorBatch implements Database.Batchable<sO
         }
 
         if (!this.courseOptions.isEmpty()) {
-            TRecCourseOptionBookingBatch bookingBatch = new TRecCourseOptionBookingBatch(this.courseOptions);
+            TRecCourseOptionBookingBatch bookingBatch = new TRecCourseOptionBookingBatch(
+                this.courseOptions,
+                this.stagedProgramBatchId
+            );
             Database.executeBatch(bookingBatch, 50);
         }
 
