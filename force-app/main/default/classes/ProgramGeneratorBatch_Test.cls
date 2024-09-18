@@ -43,10 +43,16 @@ private class ProgramGeneratorBatch_Test {
         session.Free_Product__c = product.Id;
         insert session;
 
+        Staged_Program_Batch__c batch = new Staged_Program_Batch__c();
+        batch.Session__c = session.Id;
+        batch.Description__c = 'Test import batch';
+        insert batch;
+
         List<Staged_Program__c> lstStagedPrograms = new List<Staged_Program__c>();
         for (Integer i = 0; i < NUM_COURSE_OPTIONS; i++) {
             lstStagedPrograms.add(
                 new Staged_Program__c(
+                    Staged_Program_Batch__c = batch.Id,
                     Status__c = 'Staged',
                     Program__c = lstPrograms.get(0).Id,
                     Course__c = lstCourses.get(0).Id,
@@ -76,8 +82,10 @@ private class ProgramGeneratorBatch_Test {
 
     @IsTest
     static void testBatch() {
+        Id stagedProgramBatchId = [SELECT Id FROM Staged_Program_Batch__c LIMIT 1].Id;
+        
         Test.startTest();
-        ProgramGeneratorBatch pgb = new ProgramGeneratorBatch();
+        ProgramGeneratorBatch pgb = new ProgramGeneratorBatch(stagedProgramBatchId);
         Id batchId = Database.executeBatch(pgb, 20);
         Test.stopTest();
 

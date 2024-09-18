@@ -2,6 +2,12 @@ public with sharing class TRecCourseOptionBookingHandler {
 
     private static Id facilityBookingRecTypeId = Schema.SObjectType.TREX1__Booking__c
         .getRecordTypeInfosByDeveloperName().get('Facility').getRecordTypeId();
+
+    public static List<TREX1__Booking__c> createBookingsForCourseOptions(
+        Set<Id> courseOptionsIds
+    ) {
+        return createBookingsForCourseOptions(courseOptionsIds, null);
+    }
     
     public static List<TREX1__Booking__c> createBookingsForCourseOptions(
         Set<Id> courseOptionsIds,
