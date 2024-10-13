@@ -26,7 +26,6 @@ public with sharing class ProgramGeneratorCloner {
             new Set<Id>(request.courseSessionOptionIds)
         );
         this.setDaysToAdd(request.daysToAdd);
-        System.debug(':::: received request --> ' + request);
     }
 
     public ProgramGeneratorCloner(
@@ -105,7 +104,6 @@ public with sharing class ProgramGeneratorCloner {
         // Pricing
         TREX1__Price_Level__c priceLevel = getPriceLevelMap().get(cso.TREX1__Course_Option__r.TREX1__Product__c);
         if (priceLevel != null) {
-            System.debug('::: priceLevel --> ' + priceLevel);
             stagedProgram.Public_Price__c = priceLevel.TREX1__Total_Billing_Schedule_Amount__c;
             stagedProgram.Has_Member_Price__c = true;
             stagedProgram.GL_Account_Number__c = priceLevel.TREX1__GL_Account_Recurring_Fee_Primary__r.TREX1__GL_Account_Number__c;
@@ -118,10 +116,6 @@ public with sharing class ProgramGeneratorCloner {
     }
 
     private String replaceSessionInfo(String originalString) {
-        System.debug(':::: original string --> ' + originalString);
-        System.debug(':::: original session --> ' + originalSession);
-        System.debug(':::: target session --> ' + targetSession);
-
         String result = '';
         if (!String.isBlank(originalString)) {
             result = originalString.replaceAll(originalSession.Session_Code__c, targetSession.Session_Code__c).replaceAll(originalSession.Name, targetSession.Name);

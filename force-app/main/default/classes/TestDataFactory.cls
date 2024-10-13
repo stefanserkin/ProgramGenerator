@@ -1725,6 +1725,96 @@ public class TestDataFactory {
         return nip;
     }
 
+    /***********************************
+     * Products and Discounts (TREX1)
+     ***********************************/
+
+    /**
+     * Create a free product as a placeholder for programs or memberships
+     * @return TREX1__Product__c
+     */
+    private static TREX1__Product__c freeProduct;
+
+    public static TREX1__Product__c getFreeTractionRecProduct() {
+        if (freeProduct == null) {
+            freeProduct = new TREX1__Product__c();
+            freeProduct.Name = 'Free Product';
+            freeProduct.TREX1__Billing_Cancellation_Credit_Setting__c = 'Active Days Prorated Credit';
+            freeProduct.TREX1__Allow_Multiple__c = true;
+            freeProduct.TREX1__Available_Externally__c = true;
+            freeProduct.TREX1__Global_Billing_Group__c = getGlobalBillingGroupId();
+            insert freeProduct;
+        }
+        return freeProduct;
+    }
+
+    public static List<TREX1__Product__c> createTractionRecProducts(
+        List<Decimal> listOfAmounts,
+        Id glAccountId
+    ) {
+        Id productRecordTypeId = Schema.SObjectType.TREX1__Product__c.getRecordTypeInfosByDeveloperName().get('Registration_Fee').getRecordTypeId();
+        Id priceLevelRecordTypeId = Schema.SObjectType.TREX1__Price_Level__c.getRecordTypeInfosByDeveloperName().get('Dollar').getRecordTypeId();
+        Id pbsRecordTypeId = Schema.SObjectType.TREX1__Planned_Billing_Schedule__c.getRecordTypeInfosByDeveloperName().get('Fee').getRecordTypeId();
+
+        List<TREX1__Product__c> products = new List<TREX1__Product__c>();
+        for (Decimal amt : listOfAmounts) {
+            TREX1__Product__c product = new TREX1__Product__c();
+            product.Name = 'Free Product - $' + amt.format();
+            product.RecordTypeId = productRecordTypeId;
+            product.TREX1__Billing_Cancellation_Credit_Setting__c = 'Active Days Prorated Credit';
+            product.TREX1__Allow_Multiple__c = true;
+            product.TREX1__Available_Externally__c = true;
+            product.NonMemberPrice__c = amt;
+            product.TREX1__Global_Billing_Group__c = getGlobalBillingGroupId();
+            products.add(product);
+        }
+        insert products;
+
+        List<TREX1__Price_Level__c> priceLevels = new List<TREX1__Price_Level__c>();
+        for (TREX1__Product__c product : products) {
+            TREX1__Price_Level__c pl = new TREX1__Price_Level__c();
+            pl.Name = product.Name.left(69) + ' Non-Member';
+            pl.RecordTypeId = priceLevelRecordTypeId;
+            pl.TREX1__Product__c = product.Id;
+            pl.TREX1__Price_Type__c = 'Non-Member';
+            pl.Initial_Fee_is_Administrative__c = true;
+            pl.TREX1__Initial_Fee_Amount__c = 25.00;
+            pl.TREX1__Deposit_Fee_Revenue_Recognition_Policy__c = 'On Transaction Firmed';
+            pl.TREX1__Initial_Fee_Revenue_Recognition_Policy__c = 'On Transaction Firmed';
+            pl.TREX1__Recurring_Revenue_Recognition_Policy__c = 'On Start Date';
+            pl.TREX1__GL_Account_Deposit_Fee_Primary__c = glAccountId;
+            pl.TREX1__GL_Account_Initial_Fee_Primary__c = glAccountId;
+            pl.TREX1__GL_Account_Initial_Fee_Secondary__c = glAccountId;
+            pl.TREX1__GL_Account_Recurring_Fee_Primary__c = glAccountId;
+            pl.TREX1__GL_Account_Recurring_Fee_Secondary__c = glAccountId;
+            pl.TREX1__GL_Percent_Initial_Fee_Primary__c = 100;
+            pl.TREX1__GL_Percent_Initial_Fee_Secondary__c = 0;
+            pl.TREX1__GL_Percent_Recurring_Fee_Primary__c = 100;
+            pl.TREX1__GL_Percent_Recurring_Fee_Secondary__c = 0;
+            pl.TREX1__Include_Price_In_Public_Description__c = true;
+            priceLevels.add(pl);
+        }
+        insert priceLevels;
+
+        List<TREX1__Planned_Billing_Schedule__c> lstPbs = new List<TREX1__Planned_Billing_Schedule__c>();
+        for (Integer i = 0; i < priceLevels.size(); i++) {
+            TREX1__Planned_Billing_Schedule__c pbs = new TREX1__Planned_Billing_Schedule__c();
+            pbs.RecordTypeId = pbsRecordTypeId;
+            pbs.Name = priceLevels[i].Name;
+            pbs.TREX1__Price_Level__c = priceLevels[i].Id;
+            pbs.TREX1__End_Date_Setting__c = 'Fixed End Date';
+            pbs.TREX1__Number_Of_Terms__c = 1;
+            pbs.TREX1__Proration_Setting__c = 'Do Not Prorate';
+            pbs.TREX1__Start_Date__c = Date.today().addDays(-1);
+            pbs.TREX1__Term_Type__c = 'One Time';
+            pbs.TREX1__Amount__c = listOfAmounts[i];
+            lstPbs.add(pbs);
+        }
+        insert lstPbs;
+
+        return products;
+    }
+
     
     /***********************************
      * Programs (TREX1)
@@ -1758,25 +1848,41 @@ public class TestDataFactory {
         List<TREX1__GL_Account__c> glAccounts = createGlAccounts(2);
         insert glAccounts;
 
-        TREX1__Product__c product = new TREX1__Product__c();
-        product.Name = 'Free Product';
-        product.TREX1__Billing_Cancellation_Credit_Setting__c = 'Active Days Prorated Credit';
-        product.TREX1__Allow_Multiple__c = true;
-        product.TREX1__Available_Externally__c = true;
-        product.TREX1__Global_Billing_Group__c = getGlobalBillingGroupId();
-        insert product;
+        TREX1__Product__c freeProduct = getFreeTractionRecProduct();
 
         TREX1__Session__c session = createSessions(1).get(0);
         session.UES_Free_Membership_Type__c = memTypes[0].Id;
         session.UES_Admin_GL_Account__c = glAccounts[0].Id;
         session.UES_Other_Fees_GL_Account__c = glAccounts[1].Id;
-        session.Free_Product__c = product.Id;
+        session.Free_Product__c = freeProduct.Id;
         insert session;
 
         List<TREX1__Course_Session__c> courseSessions = createCourseSessions(courses, session.Id, 1);
         insert courseSessions;
 
-        List<TREX1__Course_Session_Option__c> courseOptions = createCourseOptions(courseSessions, 2);
+        List<TREX1__Course_Session_Option__c> courseSessionOptions = createCourseOptions(courseSessions, 2);
+
+        List<Decimal> productAmounts = new List<Decimal>();
+        Decimal productAmount = 400.00;
+        for (TREX1__Course_Session_Option__c cso : courseSessionOptions) {
+            productAmounts.add(productAmount);
+            productAmount += 100.00;
+        }
+
+        List<TREX1__Product__c> products = createTractionRecProducts(productAmounts, glAccounts[0].Id);
+
+        List<TREX1__Course_Option__c> courseOptionsToUpdate = new List<TREX1__Course_Option__c>();
+        for (Integer i = 0; i < courseSessionOptions.size(); i++) {
+            courseOptionsToUpdate.add(
+                new TREX1__Course_Option__c(
+                    Id = courseSessionOptions[i].TREX1__Course_Option__c,
+                    TREX1__Location__c = location.Id,
+                    Primary_Facility__c = facility.Id,
+                    TREX1__Product__c = products[i].Id
+                )
+            );
+        }
+        update courseOptionsToUpdate;
 
         return programs[0];
     }
@@ -2420,15 +2526,15 @@ public class TestDataFactory {
             stagedPrograms.add(
                 new Staged_Program__c(
                     Staged_Program_Batch__c = batch.Id,
-                    Status__c = 'Draft',
+                    Status__c = 'Staged',
                     Program__c = program.Id,
                     Course__c = course.Id,
                     Session__c = session.Id,
                     GL_Account__c = glAccount.Id,
                     Location__c = facility.TREX1__Location__c,
                     Primary_Facility__c = facility.Id,
-                    Course_Session_Name__c = '',
-                    Course_Option_Name__c = '',
+                    Course_Session_Name__c = 'Test CS ' + String.valueOf(i),
+                    Course_Option_Name__c = 'Test CO ' + String.valueOf(i),
                     Start_Date__c = startDate,
                     End_Date__c = startDate.addDays(31),
                     Start_Time__c = '08:00 AM',
