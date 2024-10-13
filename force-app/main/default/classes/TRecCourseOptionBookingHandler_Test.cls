@@ -46,12 +46,11 @@ private class TRecCourseOptionBookingHandler_Test {
     static void testCreateBookingsWithMissingData() {
         TREX1__Facility__c primaryFacility = [SELECT Id FROM TREX1__Facility__c LIMIT 1];
 
-        // Setup test data with missing information
+        // Setup test data with missing information - no start and end time
         TREX1__Course_Option__c testCourseOption = new TREX1__Course_Option__c(
             Name = 'Test Course Option',
             TREX1__Start_Date__c = Date.today(),
             TREX1__End_Date__c = Date.today().addDays(7),
-            // Intentionally leaving out start and end time
             TREX1__Day_of_Week__c = 'Monday;Wednesday',
             Primary_Facility__c = primaryFacility.Id
         );
@@ -92,12 +91,8 @@ private class TRecCourseOptionBookingHandler_Test {
     static void testCreateBookingsWithMultipleExceptionDates() {
         List<Date> lstExceptionDates = new List<Date>{ Date.today(), Date.today().addDays(7) };
         List<String> lstExceptionDateStrings = new List<String>();
-        for (Date dt : lstExceptionDates) {
-            lstExceptionDateStrings.add(
-                String.valueOf(dt.month()) + '/' + String.valueOf(dt.day()) + '/' + String.valueOf(dt.year()).right(2)
-            );
-        }
-        String strExceptionDates = String.join(lstExceptionDateStrings, ', ');
+        for (Date ed : lstExceptionDates) lstExceptionDateStrings.add(ed.format());
+        String strExceptionDates = String.join(lstExceptionDateStrings, '; ');
 
         TREX1__Course_Option__c testCourseOption = createTestCourseOption( strExceptionDates );
         insert testCourseOption;
@@ -115,45 +110,6 @@ private class TRecCourseOptionBookingHandler_Test {
         ];
 
         Assert.isTrue(lstExceptionDateBookings.isEmpty(), 'No booking should be created on the exception date');
-    }
-
-    @IsTest
-    static void testCreateBookingsWithMixedFormatExceptionDates() {
-        List<Date> lstExceptionDates = new List<Date>{ Date.today(), Date.today().addDays(7) };
-        List<String> lstExceptionDateStrings = new List<String>();
-        for (Integer i = 0; i < lstExceptionDates.size(); i++) {
-            Date dt = lstExceptionDates[i];
-            if (Math.mod(i, 2) == 0) {
-                lstExceptionDateStrings.add(
-                    String.valueOf(dt.month()) + '/' + String.valueOf(dt.day())
-                );
-            } else {
-                lstExceptionDateStrings.add(
-                    dt.format()
-                );
-            }
-        }
-
-        String strExceptionDates = String.join(lstExceptionDateStrings, ' & ');
-        TREX1__Course_Option__c testCourseOption = createTestCourseOption(strExceptionDates);
-        insert testCourseOption;
-    
-        Set<Id> courseOptionsIds = new Set<Id>{ testCourseOption.Id };
-    
-        Test.startTest();
-        List<TREX1__Booking__c> bookings = TRecCourseOptionBookingHandler.createBookingsForCourseOptions(courseOptionsIds);
-        Test.stopTest();
-    
-        List<TREX1__Booking__c> lstExceptionDateBookings = [
-            SELECT Id 
-              FROM TREX1__Booking__c 
-             WHERE Booking_Date__c IN :lstExceptionDates
-        ];
-
-        Assert.isTrue(
-            lstExceptionDateBookings.isEmpty(), 
-            'No booking should be created on the exception date'
-        );
     }
     
     private static TREX1__Course_Option__c createTestCourseOption(

@@ -88,7 +88,8 @@ public without sharing class ProgramGeneratorBatch implements Database.Batchable
         String[] toAddress = new String[] {apexJob.CreatedBy.Email};
         email.setToAddresses(toAddress);
         email.setSubject(apexJob.Status + ': ' + BATCH_NAME);
-        email.setPlainTextBody('The ' + BATCH_NAME + ' ran and processed ' + apexJob.TotalJobItems + ' batches with ' + apexJob.NumberOfErrors + ' failures. Job Id: ' + apexJob.Id);
+        String batchRecordUrl = URL.getOrgDomainUrl() + '/' + this.stagedProgramBatchId;
+        email.setPlainTextBody('The ' + BATCH_NAME + ' has completed for batch job with Job ID ' + apexJob.Id + '. View Batch Results: ' + batchRecordUrl);
         Messaging.sendEmail(new Messaging.SingleEmailMessage[] { email });
     }
 

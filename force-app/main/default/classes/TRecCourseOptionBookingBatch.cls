@@ -1,6 +1,7 @@
 public without sharing class TRecCourseOptionBookingBatch implements Database.Batchable<sObject>, Database.Stateful {
 
     private static final String BATCH_NAME = 'TRecCourseOptionBookingBatch';
+    private static final String ADMIN_EMAIL = 'sserkin@asphaltgreen.org';
     
     private List<sObject> source;
     private Id stagedProgramBatchId;
@@ -47,8 +48,7 @@ public without sharing class TRecCourseOptionBookingBatch implements Database.Ba
         
         // Send email to job creator with batch results
         Messaging.SingleEmailMessage email = new Messaging.SingleEmailMessage();
-        String[] toAddress = new String[] {apexJob.CreatedBy.Email};
-        email.setToAddresses(toAddress);
+        email.setToAddresses(new List<String>{ ADMIN_EMAIL });
         email.setSubject(apexJob.Status + ': ' + BATCH_NAME);
         email.setPlainTextBody('The ' + BATCH_NAME + ' ran and processed ' + apexJob.TotalJobItems + ' batches with ' + apexJob.NumberOfErrors + ' failures. Job Id: ' + apexJob.Id);
         Messaging.sendEmail(new Messaging.SingleEmailMessage[] { email });

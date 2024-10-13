@@ -14,11 +14,8 @@ public with sharing class TRecCourseOptionBookingHandler {
         Id stagedProgramBatchId
     ) {
         List<TREX1__Booking__c> lstBookings = new List<TREX1__Booking__c>();
-
-        // Get course options
         List<TREX1__Course_Option__c> lstOptions = getCourseOptions(courseOptionsIds);
 
-        // Create bookings
         for (TREX1__Course_Option__c co : lstOptions) {
             if (!hasRequiredData(co)) {
                 continue;
@@ -46,8 +43,6 @@ public with sharing class TRecCourseOptionBookingHandler {
                 lstBookings.add(bk);
             }
         }
-
-        // Return bookings
         return lstBookings;
     }
 
@@ -71,38 +66,14 @@ public with sharing class TRecCourseOptionBookingHandler {
         }
     
         // Split the string by known delimiters
-        List<String> dateStrings = exceptionDatesString.split('[, &]+');
+        List<String> dateStrings = exceptionDatesString.split(';');
         for (String dateString : dateStrings) {
-            Date parsedDate = tryParseDate(dateString.trim(), courseOption);
+            Date parsedDate = Date.parse(dateString.trim());
             if (parsedDate != null) {
                 exceptionDates.add(parsedDate);
             }
         }
         return exceptionDates;
-    }
-
-    private static Date tryParseDate(
-        String dateString,
-        TREX1__Course_Option__c courseOption
-    ) {
-        List<String> formats = new List<String>{ 'M/d', 'M/d/yy', 'M/d/yyyy' };
-        for (String format : formats) {
-            String strFormattedDate = dateString;
-            try {
-                if (format == 'M/d') {
-                    // Add the current year if the format is without year
-                    strFormattedDate = dateString + '/' + courseOption.TREX1__Start_Date__c.year();
-                }
-                DateTime tempDateTime = DateTime.newInstanceGmt(
-                    Date.valueOf(dateString), 
-                    Time.newInstance(0, 0, 0, 0)
-                );
-                return tempDateTime.date();
-            } catch (Exception e) {
-                System.debug('::: found unknown format. Moving to next format');
-            }
-        }
-        return null;
     }
 
     private static List<Date> findClassDates(
