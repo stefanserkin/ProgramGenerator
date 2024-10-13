@@ -24,6 +24,7 @@ public class TestDataFactory {
     private static String glCodeAccountsReceivable;
     private static Map<String, Id> mapProcessorProfileNameToId;
     private static Integer caseCount = 0;
+    private static Integer glCodeIncrementer = 0;
     
     /***********************************
      * Constants
@@ -190,7 +191,6 @@ public class TestDataFactory {
      * @param TREX1__Location__c Traction Rec location sobject
      * @param Integer number of records
      */
-
     public static List<AccessDevice__c> createAccessDevices(
         TREX1__Location__c location,
         Integer numberOfRecords
@@ -224,7 +224,6 @@ public class TestDataFactory {
      * @param List<Contact> list of contacts to create swipes for
      * @param Integer number of swipes per contact
      */
-
     public static List<AccessSwipes__c> createAccessSwipes(
         List<AccessDevice__c> lstDevices,
         List<Contact> lstContacts,
@@ -251,6 +250,38 @@ public class TestDataFactory {
         return lstSwipes;
     }
 
+    /**
+     * Returns a JSON string with a specified number of events.
+     * @param Integer Number of events
+     * @return {String} JSON response
+     */
+    public static String generateBrivoEventsResponse(
+        Integer numberOfEvents
+    ) {
+        List<Map<String, Object>> events = new List<Map<String, Object>>();
+        
+        for (Integer i = 0; i < numberOfEvents; i++) {
+            Map<String, Object> event = new Map<String, Object>{
+                'uuid' => '049e1ca7-592a-4249-8f8c-ebcdc8e28594-' + i,
+                'securityAction' => new Map<String, Object>{ 'securityActionId' => 5064, 'action' => 'Administrator Pulse Output', 'exception' => false },
+                'actor' => new Map<String, Object>{ 'id' => 123 + i, 'name' => 'QA Admin ' + i },
+                'eventObject' => new Map<String, Object>{ 'id' => 408023598 + i, 'name' => 'Door ' + i, 'deviceType' => new Map<String, Object>{ 'id' => 1, 'name' => 'Door' } },
+                'site' => new Map<String, Object>{ 'id' => 7833522 + i, 'siteName' => 'Home base ' + i },
+                'occurred' => Datetime.now().addDays(-1).addMinutes(-i).format('yyyy-MM-dd\'T\'HH:mm:ss.SSS\'Z\''),
+                'processed' => Datetime.now().addDays(-1).addMinutes(-i).format('yyyy-MM-dd\'T\'HH:mm:ss.SSS\'Z\''),
+                'eventData' => new Map<String, Object>{ 'actorName' => 'QA Admin ' + i, 'objectName' => 'Door ' + i, 'objectGroupName' => 'Home base ' + i, 'actionAllowed' => false, 'objectTypeId' => 2, 'deviceTypeId' => 1 }
+            };
+            events.add(event);
+        }
+        
+        Map<String, Object> response = new Map<String, Object>{
+            'data' => events,
+            'pageSize' => numberOfEvents
+        };
+
+        return JSON.serialize(response);
+    }
+
 
     /***********************************
      * Accounting Events (TREX1)
@@ -263,7 +294,6 @@ public class TestDataFactory {
      * @param TREX1__Transaction_Line_Item__c parent tli
      * @param Decimal manual adjustment amount
      */
-
     public static TREX1__Accounting_Event__c createManualAdjustmentAccountingEvent(
         TREX1__Transaction__c trans,
         TREX1__Transaction_Line_Item__c tli,
@@ -292,7 +322,6 @@ public class TestDataFactory {
      * No DML - returns unsaved list of sObjects
      * @param Integer Number of records to create
      */
-
     public static List<Account> createHouseholdAccounts(
         Integer numberOfHouseholds
     ) {
@@ -316,7 +345,6 @@ public class TestDataFactory {
      * No DML - returns unsaved list of sObjects
      * @param Integer Number of records to create
      */
-
     public static List<Account> createOrganizationAccounts(
         Integer numberOfOrganizations
     ) {
@@ -346,7 +374,6 @@ public class TestDataFactory {
      * @param lstOrganizations Accounts for Contacts to be affiliated with
      * @param lstContacts Contacts to create affiliations for
      */
-
     public static List<npe5__Affiliation__c> createAffiliations(
         List<Account> lstOrganizations,
         List<Contact> lstContacts
@@ -387,7 +414,6 @@ public class TestDataFactory {
      * Create availability profile
      * No DML - returns unsaved list of sObjects
      */
-
     public static TREX1__Availability_Profile__c createAvailabilityProfile() {
         return new TREX1__Availability_Profile__c(
             Name = AVAILABILITY_PROFILE_BASE_NAME,
@@ -412,7 +438,6 @@ public class TestDataFactory {
      * @param List<TREX1__Facility__c> List of facilities to link to functions
      * @param List<TREX1__Function__c> List of functions to link to facilities
      */
-
     public static List<TREX1__Booking_Contract_Option__c> createBookingContractOptions(
         List<TREX1__Facility__c> lstFacilities,
         List<TREX1__Function__c> lstFunctions
@@ -443,11 +468,14 @@ public class TestDataFactory {
      * @param List<TREX1__Facility__c> List of facilities to book
      * @param Integer Number of records to create for each facility
      */
-
     public static List<TREX1__Booking__c> createAdminBookings(
         List<TREX1__Facility__c> lstFacilities,
         Integer numberOfBookings
     ) {
+        if (facilityBookingRTId == null) {
+            facilityBookingRTId = Schema.SObjectType.TREX1__Booking__c.getRecordTypeInfosByDeveloperName().get('Facility').getRecordTypeId();
+        }
+
         TREX1__Function__c function = new TREX1__Function__c(
             Name = FUNCTION_BASE_NAME
         );
@@ -465,23 +493,25 @@ public class TestDataFactory {
         insert lstBCOs;
 
         List<TREX1__Booking__c> lstBookings = new List<TREX1__Booking__c>();
-        for (Integer i = 0; i < numberOfBookings; i++) {
-            lstBookings.add(
-                new TREX1__Booking__c(
-                    RecordTypeId = facilityBookingRTId,
-                    TREX1__Type__c = ADMIN_BOOKING_TYPE,
-                    TREX1__Status__c = BOOKING_STATUS,
-                    TREX1__Start_Time__c = Datetime.newInstance(Date.today() + 1, Time.newInstance(i + 7, 0, 0, 0)),
-                    TREX1__End_Time__c = Datetime.newInstance(Date.today() + 1, Time.newInstance(i + 8, 0, 0, 0)),
-                    TREX1__Event_Name__c = BOOKING_EVENT_NAME,
-                    TREX1__Setup_Time_Required__c = BOOKING_SETUP_TIME_REQUIRED,
-                    TREX1__Tear_Down_Time_Required__c = BOOKING_TEAR_DOWN_TIME_REQUIRED,
-                    Booking_Rate_Calculation_Mode__c = CALCULATION_MODE_AUTOMATIC
-                )
-            );
+        for (TREX1__Facility__c facility : lstFacilities) {
+            for (Integer i = 0; i < numberOfBookings; i++) {
+                lstBookings.add(
+                    new TREX1__Booking__c(
+                        RecordTypeId = facilityBookingRTId,
+                        TREX1__Facility__c = facility.Id,
+                        TREX1__Type__c = ADMIN_BOOKING_TYPE,
+                        TREX1__Status__c = BOOKING_STATUS,
+                        TREX1__Start_Time__c = Datetime.newInstance(Date.today() + 1, Time.newInstance(i + 7, 0, 0, 0)),
+                        TREX1__End_Time__c = Datetime.newInstance(Date.today() + 1, Time.newInstance(i + 8, 0, 0, 0)),
+                        TREX1__Event_Name__c = BOOKING_EVENT_NAME,
+                        TREX1__Setup_Time_Required__c = BOOKING_SETUP_TIME_REQUIRED,
+                        TREX1__Tear_Down_Time_Required__c = BOOKING_TEAR_DOWN_TIME_REQUIRED,
+                        Booking_Rate_Calculation_Mode__c = CALCULATION_MODE_AUTOMATIC
+                    )
+                );
+            }
         }
         return lstBookings;
-
     }
 
     /**
@@ -489,7 +519,6 @@ public class TestDataFactory {
      * No DML - returns unsaved list of sObjects
      * @param Integer Number of records to create
      */
-
     public static List<TREX1__Booking__c> createRentalBookings(
         Integer numberOfBookings
     ) {
@@ -525,7 +554,6 @@ public class TestDataFactory {
      * @param TREX1__Rental_Contract__c Contract to assign bookings to
      * @param Integer Number of bookings to create for each combo
      */
-
     public static List<TREX1__Booking__c> createRentalBookings(
         List<TREX1__Facility__c> lstFacilities,
         List<TREX1__Function__c> lstFunctions,
@@ -577,7 +605,6 @@ public class TestDataFactory {
      * @param String Name of the case record type
      * @param Integer Number of cases to create
      */
-
     public static List<Case> createCases(
         String recordTypeName,
         Integer numberOfCases
@@ -599,8 +626,7 @@ public class TestDataFactory {
      * @param Integer Number of cases to create for each contact
      * @param Contact[] List of contacts
      */
-
-     public static List<Case> createCases(
+    public static List<Case> createCases(
         String recordTypeName,
         Integer numberOfCases,
         List<Contact> lstContacts
@@ -642,7 +668,6 @@ public class TestDataFactory {
      * No DML - returns unsaved list of sObjects
      * @param Integer Number of programs to create
      */
-
     public static List<pmdm__Program__c> createCommunityPrograms(
         Integer numberOfPrograms
     ) {
@@ -669,7 +694,6 @@ public class TestDataFactory {
      * No DML - returns unsaved list of sObjects
      * @param Integer Number of contacts to create for each account
      */
-
     public static List<Contact> createContacts(
         Integer numberOfContacts
     ) {
@@ -682,7 +706,6 @@ public class TestDataFactory {
      * @param List<Account> Parent accounts for created contacts
      * @param Integer Number of contacts to create for each account
      */
-
     public static List<Contact> createContacts(
         List<Account> lstParentAccounts, Integer numberOfContacts
     ) {
@@ -702,7 +725,6 @@ public class TestDataFactory {
      *     to be used by overloaded createContacts method
      * @param numberOfContacts Number of contacts to create
      */
-
     private static List<Contact> generateContactsWithDefaults(
         Integer numberOfContacts
     ) {
@@ -733,7 +755,6 @@ public class TestDataFactory {
      * @param Integer Number of course options to create for each course
      * @return TREX1__Course_Session_Option__c[] List of course session options
      */
-
     public static List<TREX1__Course_Session_Option__c> createCourseOptions(
         List<TREX1__Course_Session__c> lstCourseSessions, 
         Integer numberOfCourseOptions
@@ -748,6 +769,7 @@ public class TestDataFactory {
                 lstCourseOptions.add( 
                     new TREX1__Course_Option__c(
                         Name = coName, 
+                        TREX1__Code__c = 'ABC.123.1000' + Integer.valueOf(i),
                         TREX1__Type__c = COURSE_OPTION_TYPE_STANDARD, 
                         TREX1__Start_Date__c = startDate, 
                         TREX1__End_Date__c = endDate, 
@@ -800,7 +822,6 @@ public class TestDataFactory {
      * @param Integer Number of course sessions to create for each course
      * @return TREX1__Course_Session__c[] List of course sessions
      */
-
     public static List<TREX1__Course_Session__c> createCourseSessions(
         List<TREX1__Course__c> lstCourses, 
         Id sessionId, 
@@ -833,7 +854,6 @@ public class TestDataFactory {
      * @param Integer Number of courses to create for each program
      * @return TREX1__Course__c[] List of courses
      */
-
     public static List<TREX1__Course__c> createCourses(
         List<TREX1__Program__c> lstPrograms, 
         Integer numberOfCourses
@@ -863,7 +883,6 @@ public class TestDataFactory {
      * No DML - returns unsaved list of sObjects
      * @param Integer Number of records to create
      */
-
     public static List<TREX1__Facility__c> createFacilities(
         Integer numberOfFacilities
     ) {
@@ -890,7 +909,6 @@ public class TestDataFactory {
      * No DML - returns unsaved list of sObjects
      * @param Integer Number of records to create
      */
-
     public static List<TREX1__Function__c> createFunctions(
         Integer numberOfFunctions
     ) {
@@ -905,6 +923,45 @@ public class TestDataFactory {
         return lstFunctions;
     }
 
+    /***********************************
+     * Future Journal Entries (TREX1)
+     ***********************************/
+
+    /**
+     * Create single future journal entry
+     * No DML - returns unsaved list of sObjects
+     */
+    public static TREX1__Future_Journal_Entry__c createFutureJournalEntry(
+        TREX1__GL_Account__c glAcc,
+        String ledgerType,
+        Id jobId
+    ) {
+        return new TREX1__Future_Journal_Entry__c(
+            TREX1__Effective_Date_Time__c = System.now(),
+            TREX1__GL_Code__c = glAcc.TREX1__GL_Account_Number__c,
+            TREX1__Debit__c = (ledgerType == 'Debit' ? 100.00 : 0.00),
+            TREX1__Credit__c = (ledgerType == 'Credit' ? 100.00 : 0.00),
+            TREX1__Future_Revenue_Job__c = jobId
+        );
+    }
+
+    /***********************************
+     * Future Revenue Jobs (TREX1)
+     ***********************************/
+
+    /**
+     * Create single future revenue job
+     * No DML - returns unsaved list of sObjects
+     */
+    public static TREX1__Future_Revenue_Job__c createFutureRevenueJob() {
+        Datetime startDatetime = Datetime.newInstance(Date.today(), Time.newInstance(0, 0, 0, 0));
+        TREX1__Future_Revenue_Job__c job = new TREX1__Future_Revenue_Job__c(
+            TREX1__Target__c = 'Everything',
+            TREX1__Forecast_Start__c = startDatetime,
+            TREX1__Forecast_End__c = startDatetime.addDays(1).addMinutes(-1)
+        );
+        return job;
+    }
 
     /***********************************
      * GL Accounts (TREX1)
@@ -915,7 +972,6 @@ public class TestDataFactory {
      * No DML - returns unsaved list of sObjects
      * @param Integer Number of records to create
      */
-
     public static List<TREX1__GL_Account__c> createGlAccounts(
         Integer numberOfAccounts
     ) {
@@ -923,12 +979,13 @@ public class TestDataFactory {
         for (Integer i = 0; i < numberOfAccounts; i++) {
             lstGlAccounts.add(
                 new TREX1__GL_Account__c(
-                    Name = GL_ACCOUNT_BASE_NAME + String.valueOf(i),
+                    Name = GL_ACCOUNT_BASE_NAME + String.valueOf(glCodeIncrementer),
                     TREX1__Active__c = true,
-                    TREX1__GL_Account_Number__c = GL_ACCOUNT_BASE_CODE + String.valueOf(i),
+                    TREX1__GL_Account_Number__c = GL_ACCOUNT_BASE_CODE + String.valueOf(glCodeIncrementer),
                     TREX1__Type__c = GL_ACCOUNT_TYPE_INCOME
                 )
             );
+            glCodeIncrementer++;
         }
         return lstGlAccounts;
     }
@@ -997,7 +1054,6 @@ public class TestDataFactory {
      * Create regular public group
      * No DML - returns a single, unsaved public group
      */
-
     public static Group createRegularGroup() {
         Group newGroup = new Group(
             Name = PUBLIC_GROUP_NAME, 
@@ -1020,8 +1076,7 @@ public class TestDataFactory {
      * @param Integer Number of guest passes to create for each contact
      * @return Guest_Pass__c[] List of guest passes
      */
-
-     public static List<Guest_Pass__c> createHostGuestPasses(
+    public static List<Guest_Pass__c> createHostGuestPasses(
         List<Contact> lstContacts,
         Integer numGuestPasses
      ) {
@@ -1053,8 +1108,7 @@ public class TestDataFactory {
      * @param String adjustment type - 'Debit' or 'Credit' the gl code to adjust
      * @return List<TREX1__Transaction__c> Transactions
      */
-
-     public static List<TREX1__Journal_Entry__c> createManualAdjustmentJournalEntries(
+    public static List<TREX1__Journal_Entry__c> createManualAdjustmentJournalEntries(
         TREX1__Accounting_Event__c ae,
         String glCode,
         String adjustmentType
@@ -1103,7 +1157,6 @@ public class TestDataFactory {
      *   extra dollar
      * @return List<TREX1__Journal_Entry__c> list of created credits (AR entries)
      */
-
     public static List<TREX1__Journal_Entry__c> createCreditsEligibleToExpire(
         List<Contact> lstContacts, 
         List<TREX1__GL_Account__c> lstGlAccountsToDebit, 
@@ -1160,7 +1213,6 @@ public class TestDataFactory {
             }
         }
         return lstArCreditJes;
-
     }
 
 
@@ -1173,7 +1225,6 @@ public class TestDataFactory {
      * No DML - returns unsaved list of sObjects
      * @param Integer Number of records to create
      */
-
     public static List<TREX1__Location__c> createLocations(
         Integer numberOfLocations
     ) {
@@ -1193,8 +1244,7 @@ public class TestDataFactory {
      * No DML - returns unsaved list of sObjects
      * @param Integer Number of records to create
      */
-
-     public static List<TREX1__Location__c> createGuestPassLocations(
+    public static List<TREX1__Location__c> createGuestPassLocations(
         Integer numberOfLocations
     ) {
         List<TREX1__Location__c> lstLocations = new List<TREX1__Location__c>();
@@ -1220,7 +1270,6 @@ public class TestDataFactory {
      * @param Contact membership contact with account id
      * @param Membership type with membership category
      */
-
     public static TREX1__Membership__c createDraftStandardMembership(
         Contact contact, 
         TREX1__Membership_Type__c membershipType
@@ -1246,7 +1295,6 @@ public class TestDataFactory {
      * @param Account household
      * @param TREX1__Transaction__c parent transaction 
      */
-
     public static TREX1__Membership__c createCompletedPunchPassMembership(
         Contact contact, 
         Account account, 
@@ -1275,7 +1323,6 @@ public class TestDataFactory {
      * @param Id parent transaction id
      * @param Id membership type id
      */
-
     public static TREX1__Membership__c createCompletedPunchPassesFromType(
         Contact contact, 
         Account account, 
@@ -1305,7 +1352,6 @@ public class TestDataFactory {
      * @param Account household
      * @param TREX1__Transaction__c parent transaction 
      */
-
     public static TREX1__Membership__c createActivePunchPassMembership(
         Contact contact, 
         Account account, 
@@ -1334,7 +1380,6 @@ public class TestDataFactory {
      * @param Id parent transaction id
      * @param Id membership type id
      */
-
     public static TREX1__Membership__c createActivePunchPassesFromType(
         Contact contact, 
         Id accountId, 
@@ -1364,7 +1409,6 @@ public class TestDataFactory {
     /**
      * Get punch pass record type id
      */
-
     private static Id getPunchPassRecordTypeId() {
         if (punchPassRecTypeId == null) {
             punchPassRecTypeId = Schema.SObjectType.TREX1__Membership__c.getRecordTypeInfosByDeveloperName().get('Punch_Pass_Membership').getRecordTypeId();
@@ -1375,8 +1419,7 @@ public class TestDataFactory {
     /**
      * Get standard membership record type id
      */
-
-     private static Id getStandardMembershipRecordTypeId() {
+    private static Id getStandardMembershipRecordTypeId() {
         if (membershipStandardRecTypeId == null) {
             membershipStandardRecTypeId = Schema.SObjectType.TREX1__Membership__c.getRecordTypeInfosByDeveloperName().get('Standard_Membership').getRecordTypeId();
         }
@@ -1393,7 +1436,6 @@ public class TestDataFactory {
      * No DML - returns unsaved list of sObjects
      * @param Integer Number of membership categories to create
      */
-
     public static List<TREX1__Membership_Category__c> createMembershipCategories(
         Integer numberOfMembershipCategories
     ) {
@@ -1457,17 +1499,107 @@ public class TestDataFactory {
 
 
     /***********************************
-     * Membership Types (TREX1)
+     * Membership Promotions
      ***********************************/
 
      /**
+     * Create membership promotion sObjects with child promo benefits and assigned membership types
+     * Commits and returns saved list of sObjects
+     * @param List<TREX1__Membership_Type__c> list of membership types to assign the promo to
+     * @param TREX1__GL_Account__c Expense account to assign promotion costs to
+     */
+    public static Membership_Promotion__c createPromoWithBenefits(
+        List<TREX1__Membership_Type__c> lstMemTypes,
+        TREX1__GL_Account__c expenseGLAccount
+    ) {
+        Membership_Promotion__c promo = createActiveMembershipPromo();
+        insert promo;
+
+        List<Promotion_Benefit__c> lstPromoBenefits = new List<Promotion_Benefit__c>();
+        lstPromoBenefits.add(
+            new Promotion_Benefit__c(
+                Membership_Promotion__c = promo.Id,
+                RecordTypeId = Schema.SObjectType.Promotion_Benefit__c.getRecordTypeInfosByDeveloperName().get('Account_Credit').getRecordTypeId(),
+                Credit_Amount__c = 100.00,
+                Void_if_Cancelled__c = true,
+                Expense_GL_Account__c = expenseGLAccount.Id
+            )
+        );
+        lstPromoBenefits.add(
+            new Promotion_Benefit__c(
+                Membership_Promotion__c = promo.Id,
+                RecordTypeId = Schema.SObjectType.Promotion_Benefit__c.getRecordTypeInfosByDeveloperName().get('Guest_Passes').getRecordTypeId(),
+                Number_of_Guest_Passes__c = 2,
+                Void_if_Cancelled__c = true
+            )
+        );
+        lstPromoBenefits.add(
+            new Promotion_Benefit__c(
+                Membership_Promotion__c = promo.Id,
+                RecordTypeId = Schema.SObjectType.Promotion_Benefit__c.getRecordTypeInfosByDeveloperName().get('Initiation_Fee_Discount').getRecordTypeId(),
+                Discount_Type__c = 'Percentage',
+                Discount_Percentage__c = 100.00,
+                Expense_GL_Account__c = expenseGLAccount.Id,
+                Discount_Product__c = createPercentageDiscountProduct().Id
+            )
+        );
+        insert lstPromoBenefits;
+
+        List<Assigned_Membership_Promotion__c> lstAssignments = new List<Assigned_Membership_Promotion__c>();
+        for (TREX1__Membership_Type__c memType : lstMemTypes) {
+            lstAssignments.add(
+                new Assigned_Membership_Promotion__c(
+                    Membership_Promotion__c = promo.Id,
+                    Membership_Type__c = memType.Id
+                )
+            );
+        }
+        insert lstAssignments;
+
+        return promo;
+    }
+
+    public static Membership_Promotion__c createActiveMembershipPromo() {
+        Membership_Promotion__c promo = new Membership_Promotion__c(
+            Name = 'Test promo',
+            Active__c = true,
+            Start_Date__c = Date.today().addDays(-1),
+            End_Date__c = Date.today().addDays(1)
+        );
+        return promo;
+    }
+
+    public static TREX1__Product__c createPercentageDiscountProduct() {
+        TREX1__Product__c prod = new TREX1__Product__c();
+        prod.RecordTypeId = Schema.SObjectType.TREX1__Product__c.getRecordTypeInfosByDeveloperName().get('Discount').getRecordTypeId();
+        prod.Name = 'Test Discount Product';
+        prod.TREX1__Global_Billing_Group__c = getGlobalBillingGroupId();
+        prod.TREX1__Allow_Multiple__c = true;
+        prod.TREX1__Billing_Cancellation_Credit_Setting__c = 'No Credit';
+        prod.TREX1__Discount_End_Date_Setting__c = 'Earlier of Billing End Date and Product End Date';
+        insert prod;
+
+        TREX1__Price_Level__c pl = new TREX1__Price_Level__c();
+        pl.RecordTypeId = Schema.SObjectType.TREX1__Price_Level__c.getRecordTypeInfosByDeveloperName().get('Percentage').getRecordTypeId();
+        pl.TREX1__Product__c = prod.Id;
+        pl.Name = 'Test Discount Price Level';
+        pl.TREX1__Percentage__c = 100;
+        insert pl;
+
+        return prod;
+    }
+
+    /***********************************
+     * Membership Types (TREX1)
+     ***********************************/
+
+    /**
      * Create membership type sObjects
      * No DML - returns unsaved list of sObjects
      * @param List<TREX1__Membership_Category__c> list of categories
      * @param TREX1__Location__c location
      * @param Integer Number of membership types per category
      */
-
     public static List<TREX1__Membership_Type__c> createStandardMembershipTypes(
         List<TREX1__Membership_Category__c> lstMembershipCategories, 
         TREX1__Location__c location, 
@@ -1599,12 +1731,62 @@ public class TestDataFactory {
      ***********************************/
 
     /**
+     * Create a full Traction Rec program stack - all the way down
+     * @return TREX1__Program__c Created program
+     */
+    public static TREX1__Program__c createTractionRecProgramLibrary() {
+        TREX1__Location__c location = createLocations(1).get(0);
+        insert location;
+
+        TREX1__Facility__c facility = createFacilities(1).get(0);
+        facility.TREX1__Location__c = location.Id;
+        insert facility;
+
+        List<TREX1__Program__c> programs = createPrograms(1);
+        insert programs;
+
+        List<TREX1__Course__c> courses = createCourses(programs, 1);
+        insert courses;
+
+        // Create membership hierarchy for free memberships from course session
+        List<TREX1__Membership_Category__c> memCats = createMembershipCategories(1);
+        insert memCats;
+
+        List<TREX1__Membership_Type__c> memTypes = createMembershipTypes(memCats, location, 1);
+        insert memTypes;
+
+        List<TREX1__GL_Account__c> glAccounts = createGlAccounts(2);
+        insert glAccounts;
+
+        TREX1__Product__c product = new TREX1__Product__c();
+        product.Name = 'Free Product';
+        product.TREX1__Billing_Cancellation_Credit_Setting__c = 'Active Days Prorated Credit';
+        product.TREX1__Allow_Multiple__c = true;
+        product.TREX1__Available_Externally__c = true;
+        product.TREX1__Global_Billing_Group__c = getGlobalBillingGroupId();
+        insert product;
+
+        TREX1__Session__c session = createSessions(1).get(0);
+        session.UES_Free_Membership_Type__c = memTypes[0].Id;
+        session.UES_Admin_GL_Account__c = glAccounts[0].Id;
+        session.UES_Other_Fees_GL_Account__c = glAccounts[1].Id;
+        session.Free_Product__c = product.Id;
+        insert session;
+
+        List<TREX1__Course_Session__c> courseSessions = createCourseSessions(courses, session.Id, 1);
+        insert courseSessions;
+
+        List<TREX1__Course_Session_Option__c> courseOptions = createCourseOptions(courseSessions, 2);
+
+        return programs[0];
+    }
+
+    /**
      * Create program sObjects
      * No DML - returns unsaved list of sObjects
      * @param Integer Number of programs to create
      * @return TREX1__Program__c[] List of programs
      */
-
     public static List<TREX1__Program__c> createPrograms(
         Integer numberOfPrograms
     ) {
@@ -1621,6 +1803,32 @@ public class TestDataFactory {
         return lstPrograms;
     }
 
+    /***********************************
+     * Program Categories (TREX1)
+     ***********************************/
+
+    /**
+     * Create program category sObjects
+     * No DML - returns unsaved list of sObjects
+     * @param Integer Number of program categories to create
+     * @return TREX1__Program_Category__c[] List of programs
+     */
+    public static List<TREX1__Program_Category__c> createProgramCategories(
+        Integer numberOfProgramCategories
+    ) {
+        List<TREX1__Program_Category__c> lstProgramCategories = new List<TREX1__Program_Category__c>();
+        for (Integer i = 0; i < numberOfProgramCategories; i++) {
+            lstProgramCategories.add(
+                new TREX1__Program_Category__c(
+                    Name = 'Test Program Category ' + String.valueOf(i),
+                    TREX1__Available__c = true,
+                    TREX1__Available_Online__c = true
+                )
+            );
+        }
+        return lstProgramCategories;
+    }
+
 
     /***********************************
      * Registrations (TREX1)
@@ -1631,7 +1839,6 @@ public class TestDataFactory {
      * No DML - returns unsaved list of sObjects
      * @param Integer Number of registrations to create for each contact
      */
-
     public static List<TREX1__Registration__c> createHistoricalRegistrations(
         List<Contact> lstContacts,
         Integer numberOfRegistrations
@@ -1664,7 +1871,6 @@ public class TestDataFactory {
      * @param Contact[] lstContacts List of contacts
      * @param Id courseSessionId Course session id
      */
-
     public static List<TREX1__Registration__c> createRegistrations(
         List<Contact> lstContacts, 
         Id courseSessionId
@@ -1703,7 +1909,6 @@ public class TestDataFactory {
      * @param TREX1__Course_Session_Option__c[] lstCSOs List of course session options
      * @return TREX1__Registration__c[] List of registrations
      */
-
     public static List<TREX1__Registration__c> createRegistrations(
         List<Contact> lstContacts, 
         List<TREX1__Course_Session_Option__c> lstCSOs
@@ -1785,7 +1990,6 @@ public class TestDataFactory {
      * No DML - returns unsaved list of sObjects
      * @param Integer Number of records to create
      */
-
     public static TREX1__Rental_Contract__c createRentalContract(
         Contact ct
     ) {
@@ -1813,7 +2017,6 @@ public class TestDataFactory {
      * @param Integer Number of rental rates to create for each combo
      * @param String Type of rental rate. Accepts either 'Standard_Rate' or 'Incremental_Rate'
      */
-
     public static List<Rental_Rate__c> createRentalRates(
         List<TREX1__Facility__c> lstFacilities,
         List<TREX1__Function__c> lstFunctions,
@@ -1945,7 +2148,6 @@ public class TestDataFactory {
      * No DML - returns unsaved list of sObjects
      * @param Integer Number of rules to create
      */
-
     public static List<TREX1__Rule__c> createRules(
         Integer numberOfRules
     ) {
@@ -1969,7 +2171,6 @@ public class TestDataFactory {
      * @param List<TREX1__Rule__c> List of Rules to create scheduled rules for
      * @param Integer Number of scheduled rules to create for each rule
      */
-
     public static List<Scheduled_Rule__c> createScheduledRules(
         List<TREX1__Rule__c> lstParentRules, Integer numberOfScheduledRules
     ) {
@@ -2000,7 +2201,6 @@ public class TestDataFactory {
      * @param pmdm__Program__c community program
      * @param Integer Number of services to create
      */
-
     public static List<pmdm__Service__c> createServices(
         pmdm__Program__c program, 
         Integer numberOfServices
@@ -2031,7 +2231,6 @@ public class TestDataFactory {
      * @param pmdm__Service__c service
      * @param Integer Number of service schedules to create
      */
-
     public static List<pmdm__ServiceSchedule__c> createServiceSchedules(
         pmdm__Service__c service, 
         Integer numberOfSchedules
@@ -2061,7 +2260,6 @@ public class TestDataFactory {
      * @param pmdm__ServiceSchedule__c service schedule
      * @param Contact[] list of contacts to enroll
      */
-
     public static List<pmdm__ServiceParticipant__c> createServiceParticipants(
         pmdm__ServiceSchedule__c serviceSchedule, 
         List<Contact> lstContacts
@@ -2092,7 +2290,6 @@ public class TestDataFactory {
      * No DML - returns unsaved list of sObjects
      * @param Integer Number of sessions to create
      */
-
     public static List<TREX1__Session__c> createSessions(
         Integer numberOfSessions
     ) {
@@ -2127,7 +2324,6 @@ public class TestDataFactory {
      * No DML - returns unsaved list of Staff sObjects
      * @param List<Contact> List of Contacts to create staff for
      */
-
     public static List<TREX1__Staff__c> createStaffFromContacts(
         List<Contact> lstContacts
     ) {
@@ -2157,7 +2353,6 @@ public class TestDataFactory {
      * @param Id location id
      * @param Integer number of days
      */
-
     public static List<Staff_Availability_Schedule__c> createAvailabilityForConsecutiveDays(
         TREX1__Staff__c staff, 
         Date startDate,
@@ -2181,6 +2376,76 @@ public class TestDataFactory {
         return lstSchedules;
     }
 
+    /***********************************
+     * Staged Program Batches
+     ***********************************/
+    /**
+     * Create sas sObjects for a staff record
+     * No DML - returns unsaved list of sas sObjects
+     */
+    public static List<Staged_Program_Batch__c> createStagedProgramBatches(
+        TREX1__Session__c session,
+        Integer numberOfBatches
+    ) {
+        List<Staged_Program_Batch__c> batches = new List<Staged_Program_Batch__c>();
+        for (Integer i = 0; i < numberOfBatches; i++) {
+            batches.add(
+                new Staged_Program_Batch__c(
+                    Session__c = session.Id,
+                    Description__c = session.Name + ' batch #' + Integer.valueOf(i)
+                )
+            );
+        }
+        return batches;
+    }
+
+
+    /***********************************
+     * Staged Programs
+     ***********************************/
+    public static List<Staged_Program__c> createStagedPrograms(
+        Staged_Program_Batch__c batch,
+        TREX1__Program__c program,
+        Integer numberOfStagedPrograms
+    ) {
+        List<Staged_Program__c> stagedPrograms = new List<Staged_Program__c>();
+
+        TREX1__Course__c course = [SELECT Id FROM TREX1__Course__c WHERE TREX1__Program__c = :program.Id LIMIT 1];
+        TREX1__Session__c session = [SELECT Id FROM TREX1__Session__c LIMIT 1];
+        TREX1__GL_Account__c glAccount = [SELECT Id, TREX1__GL_Account_Number__c FROM TREX1__GL_Account__c LIMIT 1];
+        TREX1__Facility__c facility = [SELECT Id, TREX1__Location__c FROM TREX1__Facility__c LIMIT 1];
+
+        for (Integer i = 0; i < numberOfStagedPrograms; i++) {
+            Date startDate = Date.today().addDays(i);
+            stagedPrograms.add(
+                new Staged_Program__c(
+                    Staged_Program_Batch__c = batch.Id,
+                    Status__c = 'Draft',
+                    Program__c = program.Id,
+                    Course__c = course.Id,
+                    Session__c = session.Id,
+                    GL_Account__c = glAccount.Id,
+                    Location__c = facility.TREX1__Location__c,
+                    Primary_Facility__c = facility.Id,
+                    Course_Session_Name__c = '',
+                    Course_Option_Name__c = '',
+                    Start_Date__c = startDate,
+                    End_Date__c = startDate.addDays(31),
+                    Start_Time__c = '08:00 AM',
+                    End_Time__c = '10:00 AM',
+                    Course_Option_Code__c = 'abc.def.ghijk' + String.valueOf(i),
+                    Days_of_Week__c = 'Monday',
+                    Minimum_Age__c = 8.0,
+                    Maximum_Age__c = 12.0,
+                    Capacity__c = 20,
+                    Minimum_Participants__c = 1,
+                    Public_Price__c = 400.00,
+                    Has_Member_Price__c = true
+                )
+            );
+        }
+        return stagedPrograms;
+    }
 
     /***********************************
      * Tender Types (tpay)
@@ -2255,7 +2520,6 @@ public class TestDataFactory {
      * @param Contact transaction contact
      * @return List<TREX1__Transaction__c> Transactions
      */
-
     public static TREX1__Transaction__c createTransaction(
         Contact contact
     ) {
@@ -2286,8 +2550,7 @@ public class TestDataFactory {
      * @param Contact transaction contact
      * @return TREX1__Transaction__c Transaction
      */
-
-     public static TREX1__Transaction__c createDraftTransaction(
+    public static TREX1__Transaction__c createDraftTransaction(
         Contact contact
     ) {
         if (standardTransactionRecTypeId == null) {
@@ -2323,7 +2586,6 @@ public class TestDataFactory {
      * @param String adjustment type - 'Debit' or 'Credit'
      * @return TREX1__Transaction__c Transaction
      */
-
     public static TREX1__Transaction__c createManualAdjustmentTransaction(
         Contact contact,
         Decimal amount,
@@ -2405,7 +2667,6 @@ public class TestDataFactory {
      * No DML - returns unsaved list of sObjects
      * @param List<Contact> Parent contacts for created users
      */
-
     public static List<User> createExternalUsers(
         List<Contact> lstParentContacts
     ) {
@@ -2428,7 +2689,6 @@ public class TestDataFactory {
      * Create internal standard user
      * No DML - returns unsaved list of sObjects
      */
-
     public static User createStandardUser() {
         User u = ExternalUserUtilities.getUserWithDefaults();
         u.Username  = STANDARD_USER_USERNAME;
@@ -2444,9 +2704,7 @@ public class TestDataFactory {
      * Create internal standard user
      * No DML - returns unsaved sObject
      */
-
     public static User createStandardInternalUser() {
-
         Profile profile = [SELECT Id FROM Profile WHERE Name = :STANDARD_USER_PROFILE_NAME LIMIT 1];
 
         User u = new User();
@@ -2462,7 +2720,6 @@ public class TestDataFactory {
         u.LastName          = STANDARD_USER_LASTNAME;
         u.Alias             = STANDARD_USER_ALIAS;
         return u;
-
     }
 
 

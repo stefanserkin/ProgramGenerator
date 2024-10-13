@@ -1,4 +1,4 @@
-public with sharing class ProgramGeneratorService {
+public without sharing class ProgramGeneratorService {
 
     private static final String STATUS_STAGED = 'Staged';
     private static final String STATUS_PROCESSED = 'Processed';
@@ -73,7 +73,7 @@ public with sharing class ProgramGeneratorService {
                     )
                 );
             }
-            Database.update(lstStagedProgramsToUpdate, true, AccessLevel.USER_MODE);
+            Database.update(lstStagedProgramsToUpdate, true, AccessLevel.SYSTEM_MODE);
             
             return lstCos;
         } catch (Exception e) {
@@ -194,7 +194,7 @@ public with sharing class ProgramGeneratorService {
             lstCourseSessions.add(newCs);
         }
 
-        Database.insert(lstCourseSessions, true, AccessLevel.USER_MODE);
+        Database.insert(lstCourseSessions, true, AccessLevel.SYSTEM_MODE);
 
         return lstCourseSessions;
     }
@@ -284,7 +284,7 @@ public with sharing class ProgramGeneratorService {
             lstOptions.add(co);
         }
 
-        Database.insert(lstOptions, true, AccessLevel.USER_MODE);
+        Database.insert(lstOptions, true, AccessLevel.SYSTEM_MODE);
 
         // Create csos
         List<TREX1__Course_Session_Option__c> lstCsos = new List<TREX1__Course_Session_Option__c>();
@@ -299,7 +299,7 @@ public with sharing class ProgramGeneratorService {
             lstCsos.add(newCso);
             courseOptions.put(co.TREX1__Legacy_Id__c, co);
         }
-        Database.insert(lstCsos, true, AccessLevel.USER_MODE);
+        Database.insert(lstCsos, true, AccessLevel.SYSTEM_MODE);
 
         return lstOptions;
     }
@@ -329,7 +329,7 @@ public with sharing class ProgramGeneratorService {
             prod.TREX1__Legacy_Id__c = sp.Id;
             lstProducts.add(prod);
         }
-        Database.insert(lstProducts, true, AccessLevel.USER_MODE);
+        Database.insert(lstProducts, true, AccessLevel.SYSTEM_MODE);
 
         // Price Levels
         List<TREX1__Price_Level__c> lstPriceLevels = new List<TREX1__Price_Level__c>();
@@ -339,7 +339,7 @@ public with sharing class ProgramGeneratorService {
                 lstPriceLevels.add( getNewPriceLevel(prod, PRICE_TYPE_MEMBER) );
             }
         }
-        Database.insert(lstPriceLevels, true, AccessLevel.USER_MODE);
+        Database.insert(lstPriceLevels, true, AccessLevel.SYSTEM_MODE);
 
         // Planned Billing Schedules
         List<TREX1__Planned_Billing_Schedule__c> lstPbs = new List<TREX1__Planned_Billing_Schedule__c>();
@@ -358,7 +358,7 @@ public with sharing class ProgramGeneratorService {
             pbs.TREX1__Legacy_Id__c = sp.Id;
             lstPbs.add(pbs);
         }
-        Database.insert(lstPbs, true, AccessLevel.USER_MODE);
+        Database.insert(lstPbs, true, AccessLevel.SYSTEM_MODE);
 
         // Return products
         return lstProducts;
@@ -415,7 +415,7 @@ public with sharing class ProgramGeneratorService {
                    Key__c
               FROM TREX1__Course_Session__c 
              WHERE Key__c IN :setCourseSessionKeys
-              WITH USER_MODE
+              WITH SYSTEM_MODE
         ];
     }
 
@@ -436,7 +436,7 @@ public with sharing class ProgramGeneratorService {
              WHERE Id IN (SELECT TREX1__Product__c 
                             FROM TREX1__Price_Level__c
                            WHERE Key__c IN :setPriceLevelKeys)
-              WITH USER_MODE
+              WITH SYSTEM_MODE
         ];
     }
 
@@ -520,7 +520,7 @@ public with sharing class ProgramGeneratorService {
               FROM Staged_Program__c
              WHERE Id IN :stagedProgramIds
                AND Status__c = :STATUS_STAGED
-              WITH USER_MODE
+              WITH SYSTEM_MODE
              LIMIT 200
         ]);
     }
@@ -534,7 +534,7 @@ public with sharing class ProgramGeneratorService {
                 SELECT Id 
                   FROM TREX1__Global_Billing_Group__c 
                  WHERE Name = :GBG_NAME 
-                  WITH USER_MODE 
+                  WITH SYSTEM_MODE 
                  LIMIT 1
             ];
             gbgId = lstGbgs[0].Id;

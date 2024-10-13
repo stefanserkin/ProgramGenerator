@@ -1,4 +1,4 @@
-public with sharing class ProgramGeneratorBatch implements Database.Batchable<sObject>, Database.Stateful {
+public without sharing class ProgramGeneratorBatch implements Database.Batchable<sObject>, Database.Stateful {
 
     private static final String BATCH_NAME = 'Program Generator Batch';
     private static final String STATUS_STAGED = 'Staged';
@@ -64,7 +64,7 @@ public with sharing class ProgramGeneratorBatch implements Database.Batchable<sO
             Database.update(batch, AccessLevel.SYSTEM_MODE);
         }
 
-        if (!this.courseOptions.isEmpty()) {
+        if (!Test.isRunningTest() && !this.courseOptions.isEmpty()) {
             TRecCourseOptionBookingBatch bookingBatch = new TRecCourseOptionBookingBatch(
                 this.courseOptions,
                 this.stagedProgramBatchId

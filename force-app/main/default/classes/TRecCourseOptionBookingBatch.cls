@@ -1,4 +1,4 @@
-public with sharing class TRecCourseOptionBookingBatch implements Database.Batchable<sObject>, Database.Stateful {
+public without sharing class TRecCourseOptionBookingBatch implements Database.Batchable<sObject>, Database.Stateful {
 
     private static final String BATCH_NAME = 'TRecCourseOptionBookingBatch';
     

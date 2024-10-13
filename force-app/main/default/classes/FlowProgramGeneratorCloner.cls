@@ -7,7 +7,6 @@ public with sharing class FlowProgramGeneratorCloner {
     public static List<Result> createStagedPrograms(List<Request> requests) {
         List<Result> results = new List<Result>();
         for (Request request : requests) {
-            System.debug(':::: request --> ' + request);
             ProgramGeneratorCloner cloner = new ProgramGeneratorCloner(request);
 
             Result result = new Result();

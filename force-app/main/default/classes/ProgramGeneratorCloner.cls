@@ -55,7 +55,8 @@ public with sharing class ProgramGeneratorCloner {
         {
             if (session.Id == this.originalSessionId) {
                 this.originalSession = session;
-            } else {
+            }
+            if (session.Id == this.targetSessionId) {
                 this.targetSession = session;
             }
         }
@@ -91,7 +92,6 @@ public with sharing class ProgramGeneratorCloner {
         stagedProgram.End_Date__c = cso.TREX1__Course_Option__r.TREX1__End_Date__c.addDays(this.daysToAdd);
         stagedProgram.Start_Time__c = cso.TREX1__Course_Option__r.TREX1__Start_Time__c;
         stagedProgram.End_Time__c = cso.TREX1__Course_Option__r.TREX1__End_Time__c;
-        // stagedProgram.Exception_Dates__c = cso.TREX1__Course_Option__r.Exception_Dates__c;
         stagedProgram.Location__c = cso.TREX1__Course_Option__r.TREX1__Location__c;
         stagedProgram.Location_Name__c = cso.TREX1__Course_Option__r.TREX1__Location__r.Name;
         if (cso.TREX1__Course_Option__r.Primary_Facility__c != null) {
@@ -118,6 +118,10 @@ public with sharing class ProgramGeneratorCloner {
     }
 
     private String replaceSessionInfo(String originalString) {
+        System.debug(':::: original string --> ' + originalString);
+        System.debug(':::: original session --> ' + originalSession);
+        System.debug(':::: target session --> ' + targetSession);
+
         String result = '';
         if (!String.isBlank(originalString)) {
             result = originalString.replaceAll(originalSession.Session_Code__c, targetSession.Session_Code__c).replaceAll(originalSession.Name, targetSession.Name);
