@@ -101,6 +101,7 @@ public with sharing class ProgramGeneratorCloner {
         stagedProgram.Maximum_Age__c = cso.TREX1__Course_Option__r.TREX1__Age_Max__c;
         stagedProgram.Capacity__c = cso.TREX1__Course_Option__r.TREX1__Capacity__c;
         stagedProgram.Anonymous_Ticket__c = cso.TREX1__Course_Option__r.TREX1__Unnamed_Group_Registration__c;
+        stagedProgram.Available_Online__c = true;
 
         // Pricing
         TREX1__Price_Level__c priceLevel = getPriceLevelMap().get(cso.TREX1__Course_Option__r.TREX1__Product__c);
