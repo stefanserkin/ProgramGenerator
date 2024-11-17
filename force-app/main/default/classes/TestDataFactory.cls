@@ -1842,7 +1842,11 @@ public class TestDataFactory {
         List<TREX1__Membership_Category__c> memCats = createMembershipCategories(1);
         insert memCats;
 
-        List<TREX1__Membership_Type__c> memTypes = createMembershipTypes(memCats, location, 1);
+        List<TREX1__Membership_Type__c> memTypes = createStandardMembershipTypes(memCats, location, 1);
+        memTypes[0].TREX1__End_Date_Setting__c = 'Fixed Term';
+        memTypes[0].TREX1__Fixed_Term_Start_Date__c = Date.today();
+        memTypes[0].TREX1__Term_Length__c = 3;
+        memTypes[0].TREX1__Term_Type__c = 'Monthly';
         insert memTypes;
 
         List<TREX1__GL_Account__c> glAccounts = createGlAccounts(2);
@@ -2546,9 +2550,7 @@ public class TestDataFactory {
                     Capacity__c = 20,
                     Minimum_Participants__c = 1,
                     Public_Price__c = 400.00,
-                    Has_Member_Price__c = true,
-                    Waive_Initial_Fee__c = false,
-                    Anonymous_Ticket__c = false
+                    Has_Member_Price__c = true
                 )
             );
         }
