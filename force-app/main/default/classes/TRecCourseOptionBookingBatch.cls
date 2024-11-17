@@ -46,12 +46,14 @@ public without sharing class TRecCourseOptionBookingBatch implements Database.Ba
              WHERE Id = :bc.getJobId()
         ];
         
-        // Send email to job creator with batch results
-        Messaging.SingleEmailMessage email = new Messaging.SingleEmailMessage();
-        email.setToAddresses(new List<String>{ ADMIN_EMAIL });
-        email.setSubject(apexJob.Status + ': ' + BATCH_NAME);
-        email.setPlainTextBody('The ' + BATCH_NAME + ' ran and processed ' + apexJob.TotalJobItems + ' batches with ' + apexJob.NumberOfErrors + ' failures. Job Id: ' + apexJob.Id);
-        Messaging.sendEmail(new Messaging.SingleEmailMessage[] { email });
+        String createdByEmail = apexJob.CreatedBy.Email;
+        if (BatchUtilities.isOrgEmailEnabled() && !createdByEmail.startsWith('autoproc')) {
+            Messaging.SingleEmailMessage email = new Messaging.SingleEmailMessage();
+            email.setToAddresses(new List<String>{ ADMIN_EMAIL });
+            email.setSubject(apexJob.Status + ': ' + BATCH_NAME);
+            email.setPlainTextBody('The ' + BATCH_NAME + ' ran and processed ' + apexJob.TotalJobItems + ' batches with ' + apexJob.NumberOfErrors + ' failures. Job Id: ' + apexJob.Id);
+            Messaging.sendEmail(new Messaging.SingleEmailMessage[] { email });
+        }
     }
 
 }

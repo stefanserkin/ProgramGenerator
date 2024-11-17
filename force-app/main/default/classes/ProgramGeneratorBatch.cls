@@ -82,15 +82,17 @@ public without sharing class ProgramGeneratorBatch implements Database.Batchable
               FROM AsyncApexJob 
              WHERE Id = :bc.getJobId()
         ];
-        
-        // Send email to job creator with batch results
-        Messaging.SingleEmailMessage email = new Messaging.SingleEmailMessage();
-        String[] toAddress = new String[] {apexJob.CreatedBy.Email};
-        email.setToAddresses(toAddress);
-        email.setSubject(apexJob.Status + ': ' + BATCH_NAME);
-        String batchRecordUrl = URL.getOrgDomainUrl() + '/' + this.stagedProgramBatchId;
-        email.setPlainTextBody('The ' + BATCH_NAME + ' has completed for batch job with Job ID ' + apexJob.Id + '. View Batch Results: ' + batchRecordUrl);
-        Messaging.sendEmail(new Messaging.SingleEmailMessage[] { email });
+
+        String createdByEmail = apexJob.CreatedBy.Email;
+        if (BatchUtilities.isOrgEmailEnabled() && !createdByEmail.startsWith('autoproc')) {
+            Messaging.SingleEmailMessage email = new Messaging.SingleEmailMessage();
+            String[] toAddress = new String[] {createdByEmail};
+            email.setToAddresses(toAddress);
+            email.setSubject(apexJob.Status + ': ' + BATCH_NAME);
+            String batchRecordUrl = URL.getOrgDomainUrl() + '/' + this.stagedProgramBatchId;
+            email.setPlainTextBody('The ' + BATCH_NAME + ' has completed for batch job with Job ID ' + apexJob.Id + '. View Batch Results: ' + batchRecordUrl);
+            Messaging.sendEmail(new Messaging.SingleEmailMessage[] { email });
+        }
     }
 
 }
