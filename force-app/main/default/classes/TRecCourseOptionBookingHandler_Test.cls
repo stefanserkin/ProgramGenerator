@@ -111,6 +111,33 @@ private class TRecCourseOptionBookingHandler_Test {
 
         Assert.isTrue(lstExceptionDateBookings.isEmpty(), 'No booking should be created on the exception date');
     }
+
+    @IsTest
+    static void testDoNotCreateBookingsWithCourseOptionOptOut() {
+        TREX1__Facility__c primaryFacility = [SELECT Id FROM TREX1__Facility__c LIMIT 1];
+
+        TREX1__Course_Option__c testCourseOption = new TREX1__Course_Option__c(
+            Name = 'Test Course Option',
+            TREX1__Start_Date__c = Date.today(),
+            TREX1__End_Date__c = Date.today().addDays(6),
+            TREX1__Start_Time__c = '1:00 PM',
+            TREX1__End_Time__c = '2:00 PM',
+            TREX1__Day_of_Week__c = 'Monday;Wednesday',
+            Primary_Facility__c = primaryFacility.Id,
+            Do_Not_Create_Bookings__c = true
+        );
+        insert testCourseOption;
+
+        Set<Id> courseOptionsIds = new Set<Id>{ testCourseOption.Id };
+
+        Test.startTest();
+        List<TREX1__Booking__c> bookings = TRecCourseOptionBookingHandler.createBookingsForCourseOptions(
+            courseOptionsIds
+        );
+        Test.stopTest();
+
+        Assert.isTrue(bookings.isEmpty(), 'Should not have received any bookings while the opt out is enabled');
+    }
     
     private static TREX1__Course_Option__c createTestCourseOption(
         String exceptionDates

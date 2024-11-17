@@ -14,7 +14,7 @@ public with sharing class TRecCourseOptionBookingHandler {
         Id stagedProgramBatchId
     ) {
         List<TREX1__Booking__c> lstBookings = new List<TREX1__Booking__c>();
-        List<TREX1__Course_Option__c> lstOptions = getCourseOptions(courseOptionsIds);
+        List<TREX1__Course_Option__c> lstOptions = getFilteredCourseOptions(courseOptionsIds);
 
         for (TREX1__Course_Option__c co : lstOptions) {
             if (!hasRequiredData(co)) {
@@ -135,7 +135,7 @@ public with sharing class TRecCourseOptionBookingHandler {
         return Time.newInstance(hour, minute, 0, 0);
     }
 
-    private static List<TREX1__Course_Option__c> getCourseOptions(
+    private static List<TREX1__Course_Option__c> getFilteredCourseOptions(
         Set<Id> courseOptionsIds
     ) {
         return [
@@ -145,6 +145,7 @@ public with sharing class TRecCourseOptionBookingHandler {
                    TREX1__Day_of_Week__c, Primary_Facility__c
               FROM TREX1__Course_Option__c
              WHERE Id IN :courseOptionsIds
+               AND Do_Not_Create_Bookings__c = false
               WITH USER_MODE
              LIMIT 10000
         ];

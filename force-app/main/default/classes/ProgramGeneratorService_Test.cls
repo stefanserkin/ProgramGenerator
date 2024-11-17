@@ -34,5 +34,33 @@ private class ProgramGeneratorService_Test {
         Assert.areEqual('Processed', refreshedSp.Status__c, 'Final status should be processed');
         Assert.areEqual(sp.Capacity__c, co.TREX1__Capacity__c, 'Should have received the capacity from the staged program');
     }
+
+    @IsTest
+    static void testCreateAnonymousTicketCOWithInitialFeeWaived() {
+        Staged_Program__c sp = [SELECT Id, Capacity__c, Anonymous_Ticket__c, Waive_Initial_Fee__c FROM Staged_Program__c LIMIT 1];
+        sp.Anonymous_Ticket__c = true;
+        sp.Waive_Initial_Fee__c = true;
+        update sp;
+
+        ProgramGeneratorService pgs = new ProgramGeneratorService(new Set<Id>{sp.Id});
+        Test.startTest();
+        pgs.run();
+        Test.stopTest();
+        Staged_Program__c refreshedSp = [
+            SELECT Status__c 
+              FROM Staged_Program__c 
+             WHERE Id = :sp.Id LIMIT 1
+        ];
+        TREX1__Course_Option__c co = [
+            SELECT Id, Name, TREX1__Capacity__c, TREX1__Unnamed_Group_Registration__c
+              FROM TREX1__Course_Option__c 
+             WHERE Id IN (SELECT Course_Option__c 
+                            FROM Staged_Program__c 
+                           WHERE Id = :sp.Id)
+             LIMIT 1
+        ];
+        Assert.areEqual('Processed', refreshedSp.Status__c, 'Final status should be processed');
+        Assert.isTrue(co.TREX1__Unnamed_Group_Registration__c, 'Should be anonymous ticket');
+    }
     
 }

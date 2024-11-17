@@ -219,25 +219,27 @@ public without sharing class ProgramGeneratorService {
             co.TREX1__Capacity__c = sp.Capacity__c;
             co.TREX1__Age_Min__c = sp.Minimum_Age__c;
             co.TREX1__Age_Max__c = sp.Maximum_Age__c;
-            co.TREX1__Age_as_of_date__c = sp.Start_Date__c;
-            co.TREX1__Start_Date__c = sp.Start_Date__c;
-            co.TREX1__End_Date__c = sp.End_Date__c;
+            co.TREX1__Age_as_of_date__c = sp.Start_Date__c ?? null;
+            co.TREX1__Start_Date__c = sp.Start_Date__c ?? null;
+            co.TREX1__End_Date__c = sp.End_Date__c ?? null;
             co.TREX1__Start_Time__c = sp.Start_Time__c;
             co.TREX1__End_Time__c = sp.End_Time__c;
             co.Exception_Dates__c = sp.Exception_Dates__c;
-            co.Primary_Facility__c = sp.Primary_Facility__c;
+            co.Primary_Facility__c = sp.Primary_Facility__c ?? null;
             co.TREX1__Location__c = sp.Location__c;
             co.TREX1__Day_of_Week__c = sp.Days_of_Week__c;
             co.NonMemberPrice__c = sp.Public_Price__c;
             co.TREX1__Available__c = true;
-            co.TREX1__Available_Online__c = true;
+            co.TREX1__Available_Online__c = sp.Available_Online__c;
+            co.Do_Not_Create_Bookings__c = sp.Do_Not_Create_Bookings__c;
+            co.TREX1__Unnamed_Group_Registration__c = sp.Anonymous_Ticket__c;
 
             // Product
             co.TREX1__Product__c = products.get(sp.Price_Level_Key__c).Id;
 
             // Static values
             co.TREX1__Enable_Automated_Waitlist__c = true;
-            co.TREX1__Overbooking_Capacity__c = 2;
+            co.TREX1__Overbooking_Capacity__c = sp.Anonymous_Ticket__c ? 0 : 2;
             co.TREX1__Pending_Active_Total__c = 0;
             co.TREX1__Setup_Time_Required__c = 0;
             co.TREX1__Tear_Down_Time_Required__c = 0;
@@ -266,13 +268,13 @@ public without sharing class ProgramGeneratorService {
 
             // Registration availability info
             co.TREX1__Register_From_Date__c = session.TREX1__Register_From_Date__c;
-            co.TREX1__Register_To_Date__c = sp.End_Date__c;
+            co.TREX1__Register_To_Date__c = sp.End_Date__c ?? session.TREX1__End_Date__c;
             co.TREX1__Register_Online_From_Date__c = session.TREX1__Register_Online_From_Date__c;
-            co.TREX1__Register_Online_To_Date__c = sp.End_Date__c;
+            co.TREX1__Register_Online_To_Date__c = sp.End_Date__c ?? session.TREX1__End_Date__c;
             co.TREX1__Register_From_Time__c = '8:30 AM';
-            co.TREX1__Register_To_Time__c = sp.Start_Time__c;
+            co.TREX1__Register_To_Time__c = sp.Start_Time__c ?? '8:30 AM';
             co.TREX1__Register_Online_From_Time__c = '8:30 AM';
-            co.TREX1__Register_Online_To_Time__c = sp.Start_Time__c;
+            co.TREX1__Register_Online_To_Time__c = sp.Start_Time__c ?? '8:30 AM';
             co.TREX1__Early_Register__c = false;
             co.TREX1__Early_Register_Online__c = false;
             co.TREX1__Early_Register_From_Time__c = '12:00 AM';
@@ -382,8 +384,6 @@ public without sharing class ProgramGeneratorService {
         pl.RecordTypeId = priceLevelRecordTypeId;
         pl.TREX1__Product__c = product.Id;
         pl.TREX1__Price_Type__c = priceType;
-        pl.Initial_Fee_is_Administrative__c = true;
-        pl.TREX1__Initial_Fee_Amount__c = INITIAL_FEE_AMOUNT;
         pl.TREX1__Deposit_Fee_Revenue_Recognition_Policy__c = 'On Transaction Firmed';
         pl.TREX1__Initial_Fee_Revenue_Recognition_Policy__c = 'On Transaction Firmed';
         pl.TREX1__Recurring_Revenue_Recognition_Policy__c = 'On Start Date';
@@ -397,6 +397,13 @@ public without sharing class ProgramGeneratorService {
         pl.TREX1__GL_Percent_Recurring_Fee_Primary__c = 100;
         pl.TREX1__GL_Percent_Recurring_Fee_Secondary__c = 0;
         pl.TREX1__Include_Price_In_Public_Description__c = true;
+
+        if (!sp.Waive_Initial_Fee__c) {
+            pl.Initial_Fee_is_Administrative__c = true;
+            pl.TREX1__Initial_Fee_Amount__c = INITIAL_FEE_AMOUNT;
+        } else {
+            pl.TREX1__Initial_Fee_Amount__c = 0.00;
+        }
 
         pl.TREX1__Legacy_Id__c = sp.Id;
 
@@ -516,7 +523,11 @@ public without sharing class ProgramGeneratorService {
                    Course_Option_Name__c,
                    Course_Option_Code__c,
                    Course_Session__c,
-                   Course_Option__c
+                   Course_Option__c,
+                   Do_Not_Create_Bookings__c,
+                   Anonymous_Ticket__c,
+                   Waive_Initial_Fee__c,
+                   Available_Online__c
               FROM Staged_Program__c
              WHERE Id IN :stagedProgramIds
                AND Status__c = :STATUS_STAGED

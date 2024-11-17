@@ -2546,7 +2546,9 @@ public class TestDataFactory {
                     Capacity__c = 20,
                     Minimum_Participants__c = 1,
                     Public_Price__c = 400.00,
-                    Has_Member_Price__c = true
+                    Has_Member_Price__c = true,
+                    Waive_Initial_Fee__c = false,
+                    Anonymous_Ticket__c = false
                 )
             );
         }
