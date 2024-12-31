@@ -118,7 +118,9 @@ public without sharing class ProgramGeneratorService {
         // Get existing products for price level keys
         mapProdKeyToStagedProgram = new Map<String, Staged_Program__c>();
         for (Staged_Program__c sp : stagedPrograms.values()) {
-            mapProdKeyToStagedProgram.put(sp.Price_Level_Key__c, sp);
+            if (!sp.Free_Program__c) {
+                mapProdKeyToStagedProgram.put(sp.Price_Level_Key__c, sp);
+            }
         }
         for (TREX1__Product__c prod : queryForProducts(mapProdKeyToStagedProgram.keySet())) {
             products.put(prod.TREX1__Price_Levels__r[0].Key__c, prod);
@@ -235,7 +237,9 @@ public without sharing class ProgramGeneratorService {
             co.TREX1__Unnamed_Group_Registration__c = sp.Anonymous_Ticket__c;
 
             // Product
-            co.TREX1__Product__c = products.get(sp.Price_Level_Key__c).Id;
+            co.TREX1__Product__c = sp.Free_Program__c 
+                ? session.Free_Product__c 
+                : products.get(sp.Price_Level_Key__c).Id;
 
             // Static values
             co.TREX1__Enable_Automated_Waitlist__c = true;
@@ -514,6 +518,7 @@ public without sharing class ProgramGeneratorService {
                    Minimum_Participants__c,
                    Minimum_Age__c,
                    Maximum_Age__c,
+                   Free_Program__c,
                    Public_Price__c,
                    Member_Price__c,
                    Has_Member_Price__c,
