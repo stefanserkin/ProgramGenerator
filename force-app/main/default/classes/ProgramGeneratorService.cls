@@ -21,7 +21,7 @@ public without sharing class ProgramGeneratorService {
     private static final Decimal INITIAL_FEE_AMOUNT = 25.00;
 
     private static Id gbgId;
-    private static Date pbsStartDate = Date.newInstance(2024,1,1);
+    private static Date pbsStartDate = Date.newInstance(2024, 1, 1);
 
     private Map<Id, Staged_Program__c> stagedPrograms;
     private Map<Id, TREX1__Session__c> sessions;
@@ -163,15 +163,12 @@ public without sharing class ProgramGeneratorService {
             newCs.TREX1__Product__c = session.Free_Product__c;
 
             // Set location-specific properties
+            newCs.TREX1__Transfer_GL_Account__c = newCsSp.Location__r.Other_Fees_GL_Account__c;
+            newCs.TREX1__Withdrawal_GL_Account__c = newCsSp.Location__r.Other_Fees_GL_Account__c;
             if (newCsSp.Location__r.Name == LOCATION_BPC) {
                 newCs.TREX1__Free_Membership_Type__c = session.BPC_Free_Membership_Type__c;
-                newCs.TREX1__Transfer_GL_Account__c = session.BPC_Other_Fees_GL_Account__c;
-                newCs.TREX1__Withdrawal_GL_Account__c = session.BPC_Other_Fees_GL_Account__c;
-            } 
-            else if (newCsSp.Location__r.Name == LOCATION_UES) {
+            } else if (newCsSp.Location__r.Name == LOCATION_UES) {
                 newCs.TREX1__Free_Membership_Type__c = session.UES_Free_Membership_Type__c;
-                newCs.TREX1__Transfer_GL_Account__c = session.UES_Other_Fees_GL_Account__c;
-                newCs.TREX1__Withdrawal_GL_Account__c = session.UES_Other_Fees_GL_Account__c;
             }
 
             // Free membership dates
@@ -271,7 +268,7 @@ public without sharing class ProgramGeneratorService {
             co.TREX1__Show_Watlist_Capacity__c = false;
 
             // Registration availability info
-            co.TREX1__Register_From_Date__c = session.TREX1__Register_From_Date__c;
+            co.TREX1__Register_From_Date__c = session.TREX1__Register_From_Date__c < Date.today() ? Date.today() : session.TREX1__Register_From_Date__c;
             co.TREX1__Register_To_Date__c = sp.End_Date__c ?? session.TREX1__End_Date__c;
             co.TREX1__Register_Online_From_Date__c = session.TREX1__Register_Online_From_Date__c;
             co.TREX1__Register_Online_To_Date__c = sp.End_Date__c ?? session.TREX1__End_Date__c;
@@ -378,10 +375,7 @@ public without sharing class ProgramGeneratorService {
         String priceType
     ) {
         Staged_Program__c sp = mapProdKeyToStagedProgram.get(product.Key__c);
-        TREX1__Session__c session = getSessionMap().get(sp.Session__c);
-        Id adminGlAccountId = sp.Location__r.Name == LOCATION_BPC 
-            ? session.BPC_Admin_GL_Account__c 
-            : session.UES_Admin_GL_Account__c;
+        // TREX1__Session__c session = getSessionMap().get(sp.Session__c);
 
         TREX1__Price_Level__c pl = new TREX1__Price_Level__c();
         pl.Name = product.Name.left(69) + ' ' + priceType;
@@ -392,8 +386,8 @@ public without sharing class ProgramGeneratorService {
         pl.TREX1__Initial_Fee_Revenue_Recognition_Policy__c = 'On Transaction Firmed';
         pl.TREX1__Recurring_Revenue_Recognition_Policy__c = 'On Start Date';
         pl.TREX1__GL_Account_Deposit_Fee_Primary__c = sp.GL_Account__c;
-        pl.TREX1__GL_Account_Initial_Fee_Primary__c = adminGlAccountId;
-        pl.TREX1__GL_Account_Initial_Fee_Secondary__c = adminGlAccountId;
+        pl.TREX1__GL_Account_Initial_Fee_Primary__c = sp.Location__r.Admin_Fees_GL_Account__c;
+        pl.TREX1__GL_Account_Initial_Fee_Secondary__c = sp.Location__r.Admin_Fees_GL_Account__c;
         pl.TREX1__GL_Account_Recurring_Fee_Primary__c = sp.GL_Account__c;
         pl.TREX1__GL_Account_Recurring_Fee_Secondary__c = sp.GL_Account__c;
         pl.TREX1__GL_Percent_Initial_Fee_Primary__c = 100;
@@ -465,10 +459,6 @@ public without sharing class ProgramGeneratorService {
                        Name,
                        BPC_Free_Membership_Type__c,
                        UES_Free_Membership_Type__c,
-                       UES_Admin_GL_Account__c,
-                       BPC_Admin_GL_Account__c,
-                       UES_Other_Fees_GL_Account__c,
-                       BPC_Other_Fees_GL_Account__c,
                        Free_Product__c,
                        TREX1__Start_Date__c,
                        TREX1__End_Date__c,
