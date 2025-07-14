@@ -1,0 +1,17 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<CustomField xmlns="http://soap.sforce.com/2006/04/metadata">
+    <fullName>Other_Fees_GL_Account__c</fullName>
+    <deleteConstraint>SetNull</deleteConstraint>
+    <description>Used in the Program Generator. The GL Account to associate with &quot;other fees&quot; on the Course Session.</description>
+    <externalId>false</externalId>
+    <inlineHelpText>Used in the Program Generator. The GL Account to associate with &quot;other fees&quot; on the Course Session.</inlineHelpText>
+    <label>Other Fees GL Account</label>
+    <referenceTo>TREX1__GL_Account__c</referenceTo>
+    <relationshipLabel>Other Fees Locations</relationshipLabel>
+    <relationshipName>Other_Fee_Locations</relationshipName>
+    <required>false</required>
+    <trackFeedHistory>false</trackFeedHistory>
+    <trackHistory>false</trackHistory>
+    <trackTrending>false</trackTrending>
+    <type>Lookup</type>
+</CustomField>

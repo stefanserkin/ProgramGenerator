@@ -508,6 +508,8 @@ public without sharing class ProgramGeneratorService {
                    Primary_Facility__c,
                    Location__c,
                    Location__r.Name,
+                   Location__r.Admin_Fees_GL_Account__c,
+                   Location__r.Other_Fees_GL_Account__c,
                    Start_Date__c,
                    End_Date__c,
                    Start_Time__c,
