@@ -11,14 +11,25 @@
   ISBLANK( Course_Session_Name__c ),
   ISBLANK( Course_Option_Name__c ),
   ISBLANK( Session__c ),
-  ISBLANK( Days_of_Week__c ),
-  ISBLANK( Start_Date__c ),
-  ISBLANK( End_Date__c ),
-  ISBLANK( Start_Time__c ),
-  ISBLANK( End_Time__c ),
-  ISBLANK( GL_Account__c ),
-  ISBLANK( Primary_Facility__c ),
-  ISBLANK( Public_Price__c )
+  AND(
+    !Free_Program__c,
+    OR(
+      ISBLANK( GL_Account__c ),
+      ISBLANK( Public_Price__c )
+    )
+  ),
+  
+  AND(
+   !Do_Not_Create_Bookings__c,
+   OR(
+    ISBLANK( Primary_Facility__c ),
+    ISBLANK( Days_of_Week__c ),
+    ISBLANK( Start_Date__c ),
+    ISBLANK( End_Date__c ),
+    ISBLANK( Start_Time__c ),
+    ISBLANK( End_Time__c )
+   )
+  )
  )
 )</errorConditionFormula>
     <errorMessage>Staged records must have a Program, Course, Course Session Name, Course Option Name, Session, Days of Week, Start Date, End Date, Start Time, End Time, GL Account, Primary Facility, and Public Price.</errorMessage>

@@ -1,0 +1,13 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<ValidationRule xmlns="http://soap.sforce.com/2006/04/metadata">
+    <fullName>ExceptionDateValidation</fullName>
+    <active>true</active>
+    <description>Exception Dates must be entered as a semi-colon separated list of dates with M/d/yyyy format.</description>
+    <errorConditionFormula>NOT(
+    REGEX(Exception_Dates__c, 
+        &quot;^((0?[1-9]|1[0-2])/(0?[1-9]|[12][0-9]|3[01])/([0-9]{4})(; ?(0?[1-9]|1[0-2])/(0?[1-9]|[12][0-9]|3[01])/([0-9]{4}))*)?$&quot;
+    )
+)</errorConditionFormula>
+    <errorDisplayField>Exception_Dates__c</errorDisplayField>
+    <errorMessage>Exception Dates must be entered as a semi-colon separated list of dates with M/d/yyyy format.</errorMessage>
+</ValidationRule>

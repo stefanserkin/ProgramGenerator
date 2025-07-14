@@ -128,17 +128,17 @@
     </actionOverrides>
     <actionOverrides>
         <actionName>View</actionName>
-        <comment>Action override created by Lightning App Builder during activation.</comment>
-        <content>Staged_Program_Record_Page</content>
-        <formFactor>Large</formFactor>
+        <comment>Action override updated by Lightning App Builder during activation.</comment>
+        <content>Staged_Program_Batch_Record_Page</content>
+        <formFactor>Small</formFactor>
         <skipRecordTypeSelect>false</skipRecordTypeSelect>
         <type>Flexipage</type>
     </actionOverrides>
     <actionOverrides>
         <actionName>View</actionName>
-        <comment>Action override created by Lightning App Builder during activation.</comment>
-        <content>Staged_Program_Record_Page</content>
-        <formFactor>Small</formFactor>
+        <comment>Action override updated by Lightning App Builder during activation.</comment>
+        <content>Staged_Program_Batch_Record_Page</content>
+        <formFactor>Large</formFactor>
         <skipRecordTypeSelect>false</skipRecordTypeSelect>
         <type>Flexipage</type>
     </actionOverrides>
@@ -146,10 +146,10 @@
         <actionName>View</actionName>
         <type>Default</type>
     </actionOverrides>
-    <allowInChatterGroups>true</allowInChatterGroups>
-    <compactLayoutAssignment>SYSTEM</compactLayoutAssignment>
+    <allowInChatterGroups>false</allowInChatterGroups>
+    <compactLayoutAssignment>Staged_Program_Batch_Compact_Layout</compactLayoutAssignment>
     <deploymentStatus>Deployed</deploymentStatus>
-    <description>Represents the variable details needed for an individual program offering in Traction Rec</description>
+    <description>Represents a collection of staged programs</description>
     <enableActivities>true</enableActivities>
     <enableBulkApi>true</enableBulkApi>
     <enableFeeds>false</enableFeeds>
@@ -160,22 +160,22 @@
     <enableSharing>true</enableSharing>
     <enableStreamingApi>true</enableStreamingApi>
     <externalSharingModel>Private</externalSharingModel>
-    <label>Staged Program</label>
+    <label>Staged Program Batch</label>
     <nameField>
-        <displayFormat>SP-{00000}</displayFormat>
-        <label>Staged Program Name</label>
+        <displayFormat>SPB-{00000}</displayFormat>
+        <label>Staged Program Batch Name</label>
         <trackHistory>true</trackHistory>
         <type>AutoNumber</type>
     </nameField>
-    <pluralLabel>Staged Programs</pluralLabel>
+    <pluralLabel>Staged Program Batches</pluralLabel>
     <searchLayouts>
-        <searchResultsAdditionalFields>Program__c</searchResultsAdditionalFields>
-        <searchResultsAdditionalFields>Course__c</searchResultsAdditionalFields>
+        <searchResultsAdditionalFields>Description__c</searchResultsAdditionalFields>
         <searchResultsAdditionalFields>Status__c</searchResultsAdditionalFields>
         <searchResultsAdditionalFields>Session__c</searchResultsAdditionalFields>
-        <searchResultsAdditionalFields>Course_Session__c</searchResultsAdditionalFields>
-        <searchResultsAdditionalFields>Course_Option__c</searchResultsAdditionalFields>
+        <searchResultsAdditionalFields>Batch_Completed_Date_Time__c</searchResultsAdditionalFields>
+        <searchResultsAdditionalFields>CREATED_DATE</searchResultsAdditionalFields>
+        <searchResultsAdditionalFields>OWNER.ALIAS</searchResultsAdditionalFields>
     </searchLayouts>
-    <sharingModel>ReadWrite</sharingModel>
+    <sharingModel>Read</sharingModel>
     <visibility>Public</visibility>
 </CustomObject>

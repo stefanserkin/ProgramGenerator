@@ -6,7 +6,7 @@
     <externalId>false</externalId>
     <inlineHelpText>If checked, a member price level will be generated for the course option product</inlineHelpText>
     <label>Has Member Price</label>
-    <trackHistory>false</trackHistory>
+    <trackHistory>true</trackHistory>
     <trackTrending>false</trackTrending>
     <type>Checkbox</type>
 </CustomField>
