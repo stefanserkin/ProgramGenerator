@@ -57,6 +57,7 @@ public class TestDataFactory {
     private static final String RENTAL_BOOKING_TYPE = 'Rental';
     private static final String ADMIN_BOOKING_TYPE = 'Administrative';
     private static final String CALCULATION_MODE_AUTOMATIC = 'Automatic';
+    private static final String CALCULATION_MODE_MANUAL = 'Manual';
     // Cases
     private static final String CASE_STATUS_NEW = 'New';
     private static final String CASE_PRIORITY_MEDIUM = 'Medium';
@@ -461,6 +462,59 @@ public class TestDataFactory {
     /***********************************
      * Bookings (TREX1)
      ***********************************/
+    
+    /**
+     * Create tryout bookings
+     * Returns list of bookings committed to database
+     */
+    public static List<TREX1__Booking__c> createTryoutBookings(
+        Id courseId,
+        Integer numberOfBookings
+    ) {
+        if (facilityBookingRTId == null) {
+            facilityBookingRTId = Schema.SObjectType.TREX1__Booking__c.getRecordTypeInfosByDeveloperName().get('Facility').getRecordTypeId();
+        }
+
+        TREX1__Location__c location = createLocations(1)[0];
+        insert location;
+
+        TREX1__Facility__c facility = createFacilities(1)[0];
+        facility.TREX1__Location__c = location.Id;
+        insert facility;
+
+        TREX1__Function__c function = new TREX1__Function__c(Name = 'Tryout');
+        insert function;
+
+        TREX1__Booking_Contract_Option__c bco = new TREX1__Booking_Contract_Option__c(
+            TREX1__Facility__c = facility.Id,
+            TREX1__Function__c = function.Id
+        );
+        insert bco;
+
+        List<TREX1__Booking__c> bookings = new List<TREX1__Booking__c>();
+        for (Integer i = 0; i < numberOfBookings; i++) {
+            bookings.add(
+                new TREX1__Booking__c(
+                    RecordTypeId = facilityBookingRTId,
+                    TREX1__Facility__c = facility.Id,
+                    TREX1__Type__c = ADMIN_BOOKING_TYPE,
+                    TREX1__Status__c = BOOKING_STATUS,
+                    TREX1__Start_Time__c = Datetime.newInstance(Date.today() - 1, Time.newInstance(i + 7, 0, 0, 0)),
+                    TREX1__End_Time__c = Datetime.newInstance(Date.today() - 1, Time.newInstance(i + 8, 0, 0, 0)),
+                    TREX1__Event_Name__c = BOOKING_EVENT_NAME,
+                    TREX1__Setup_Time_Required__c = BOOKING_SETUP_TIME_REQUIRED,
+                    TREX1__Tear_Down_Time_Required__c = BOOKING_TEAR_DOWN_TIME_REQUIRED,
+                    Booking_Rate_Calculation_Mode__c = CALCULATION_MODE_MANUAL,
+                    TREX1__Function_Name__c = function.Name,
+                    TREX1__book_Function__c = function.Id,
+                    TREX1__Function_ID__c = function.Id,
+                    Course__c = courseId
+                )
+            );
+        }
+        insert bookings;
+        return bookings;
+    }
 
     /**
      * Create admin bookings
@@ -1676,6 +1730,88 @@ public class TestDataFactory {
         return lstMembershipTypes;
     }
 
+    /***********************************
+     * Navigation Menu
+     ***********************************/
+
+    /**
+     * Create a navigation menu with navigation menu items
+     * @param Navigation_Menu__c list of navigation menu
+     */
+    public static Navigation_Menu__c createNavigationMenu() {
+        Navigation_Menu__c menu = new Navigation_Menu__c();
+        menu.Name = 'Test Name';
+        menu.Display_Type__c = 'Tiles';
+        menu.Background_Color__c = '#000000';
+        menu.Label_Color__c = '#ffffff';
+        insert menu;
+
+        List<Navigation_Menu_Item__c> menuItems = new List<Navigation_Menu_Item__c>();
+        menuItems.add(
+            new Navigation_Menu_Item__c(
+                Navigation_Menu__c = menu.Id,
+                Name = 'Do a 1 thing',
+                Destination_URL__c = 'https://www.mets.com',
+                Label__c = 'Test Label',
+                Icon_Name__c = 'Standard:Feedback',
+                Icon_Size__c = 'Large',
+                Small_Device_Size__c = 12,
+                Medium_Device_Size__c = 6,
+                Large_Device_Size__c = 6,
+                Sort_Order__c = 1.00
+            )
+        );
+
+        menuItems.add(
+            new Navigation_Menu_Item__c(
+                Navigation_Menu__c = menu.Id,
+                Name = 'Do a 2 thing',
+                Destination_URL__c = 'https://www.metsmerizedonline.com',
+                URL_Parameters__c = 'param1,param2',
+                Label__c = 'Another Label',
+                Icon_Name__c = 'Utility:Case',
+                Icon_Size__c = 'Small',
+                Small_Device_Size__c = 6,
+                Medium_Device_Size__c = 2,
+                Large_Device_Size__c = 2,
+                Sort_Order__c = 1.00
+            )
+        );
+        insert menuItems;
+
+        return menu;
+    }
+
+    /***********************************
+     * Opportunities
+     ***********************************/
+
+    /**
+     * Create opportunity sObjects for a list of contacts
+     * No DML - returns unsaved list of sObjects
+     * @param List<Contact> lstContacts - Parent primary contacts for created opps
+     * @param String stageName
+     */
+    public static List<Opportunity> createOpportunitiesForContacts(
+        List<Contact> lstContacts,
+        String stageName
+    ) {
+        List<Opportunity> lstOpps = new List<Opportunity>();
+        for (Integer i = 0; i < lstContacts.size(); i++) {
+            lstOpps.add(
+                new Opportunity(
+                    Name = 'Test Opportunity ' + lstContacts[i].Id + '-' + String.valueOf(i),
+                    AccountId = lstContacts[i].AccountId,
+                    npsp__Primary_Contact__c = lstContacts[i].Id,
+                    CloseDate = Date.today().addDays((i*-1)),
+                    StageName = stageName,
+                    Amount = (1000 + i)
+                )
+            );
+        }
+        return lstOpps;
+    }
+
 
     /***********************************
      * Processor Profiles (tpay)
@@ -1825,7 +1961,12 @@ public class TestDataFactory {
      * @return TREX1__Program__c Created program
      */
     public static TREX1__Program__c createTractionRecProgramLibrary() {
+        List<TREX1__GL_Account__c> glAccounts = createGlAccounts(3);
+        insert glAccounts;
+
         TREX1__Location__c location = createLocations(1).get(0);
+        location.Admin_Fees_GL_Account__c = glAccounts[2].Id;
+        location.Other_Fees_GL_Account__c = glAccounts[2].Id;
         insert location;
 
         TREX1__Facility__c facility = createFacilities(1).get(0);
@@ -1848,9 +1989,6 @@ public class TestDataFactory {
         memTypes[0].TREX1__Term_Length__c = 3;
         memTypes[0].TREX1__Term_Type__c = 'Monthly';
         insert memTypes;
-
-        List<TREX1__GL_Account__c> glAccounts = createGlAccounts(2);
-        insert glAccounts;
 
         TREX1__Product__c freeProduct = getFreeTractionRecProduct();
 
@@ -2686,6 +2824,46 @@ public class TestDataFactory {
     }
 
     /**
+     * Create a transaction for a contact in a draft status
+     * @param Id transaction contact id
+     * @return TREX1__Transaction__c Transaction
+     */
+    public static TREX1__Transaction__c createTransaction(Id contactId) {
+        Id recordTypeId = Schema.SObjectType.TREX1__Transaction__c.getRecordTypeInfosByDeveloperName().get('Standard').getRecordTypeId();
+        TREX1__Transaction__c trx = new TREX1__Transaction__c();
+        trx.RecordTypeId = recordTypeId;
+        trx.TREX1__Status__c = 'Draft';
+        trx.TREX1__Contact__c = contactId;
+        return trx;
+    }
+
+    public static List<ContentDocumentLink> createReceipts(List<SObject> linkedEntities) {
+        ContentVersion cv = new ContentVersion();
+        cv.title = 'receipt-012345';
+        cv.PathOnClient ='test';
+        cv.VersionData = Blob.valueOf('Test File Body');
+        insert cv;
+
+        ContentVersion cvRefreshed = [SELECT Id, ContentDocumentId FROM ContentVersion where Id = :cv.Id];
+
+        List<ContentDocumentLink> cdls = new List<ContentDocumentLink>();
+        for (SObject sobj : linkedEntities) {
+            Id linkedEntityId = (Id) sobj.get('Id');
+            cdls.add( createContentDocumentLink(linkedEntityId, cvRefreshed.ContentDocumentId) );
+        }
+        return cdls;
+    }
+
+    public static ContentDocumentLink createContentDocumentLink(Id linkedEntityId, Id contentDocumentId) {
+        ContentDocumentLink cdl = new ContentDocumentLink();
+        cdl.LinkedEntityId = linkedEntityId;
+        cdl.ContentDocumentId = contentDocumentId;
+        cdl.ShareType = 'I';
+        cdl.Visibility = 'AllUsers';
+        return cdl;
+    }
+
+    /**
      * Create a manual adjustment transaction for a contact and account, complete with 
      * transaction line items, accounting events and journal entries. All manual adjustments
      * use accounts receivable as one side of the adjustment. Provide the other gl code to
@@ -2765,6 +2943,99 @@ public class TestDataFactory {
             TREX1__On_Close_Actions__c = 'No Action'
         );
         return tli;
+    }
+    
+    
+    /***********************************
+     * Tryouts
+     ***********************************/
+
+    /**
+     * Create a full tryout scenario. A tryout with
+     *   - a program
+     *   - a session
+     *   - a booking
+     *   - 5 tryout participants
+     */
+    public static Tryout__c createTryoutScenario() {
+        TREX1__Program__c program = createPrograms(1).get(0);
+        insert program;
+
+        TREX1__Course__c course = createCourses(new List<TREX1__Program__c>{program}, 1).get(0);
+        insert course;
+
+        Tryout__c tryout = new Tryout__c();
+        tryout.Name = program.Name + ' Tryout';
+        tryout.Program__c = program.Id;
+        tryout.Start_Date__c = Date.today().addMonths(-1);
+        tryout.End_Date__c = Date.today().addMonths(1);
+        insert tryout;
+
+        // Booking is already inserted
+        TREX1__Booking__c booking = createTryoutBookings(course.Id, 1).get(0);
+
+        List<Contact> contacts = createContacts(5);
+        insert contacts;
+
+        Contact coachContact = contacts.remove(0);
+        Course_Staff__c staff = new Course_Staff__c(Course__c = course.Id, Contact__c = coachContact.Id, Role__c = 'Head Coach', Active__c = true);
+        insert staff;
+
+        List<Tryout_Participant__c> participants = createTryoutParticipants(contacts, tryout.Id, booking);
+        insert participants;
+
+        List<Player_Evaluation__c> evaluations = createPlayerEvaluations(participants, new List<Contact>{coachContact});
+        insert evaluations;
+
+        return tryout;
+    }
+
+    /***********************************
+     * Tryout Participants
+     ***********************************/
+
+    public static List<Tryout_Participant__c> createTryoutParticipants(
+        List<Contact> contacts,
+        Id tryoutId,
+        TREX1__Booking__c booking
+    ) {
+        List<Tryout_Participant__c> tryoutParticipants = new List<Tryout_Participant__c>();
+        for (Contact ct : contacts) {
+            tryoutParticipants.add(
+                new Tryout_Participant__c(
+                    Contact__c = ct.Id,
+                    Parent__c = ct.Id,
+                    Tryout__c = tryoutId,
+                    Booking__c = booking.Id,
+                    Course__c = booking.Course__c,
+                    Application_Status__c = 'Invited to Tryout',
+                    Invitation_Status__c = 'Accepted',
+                    Tryout_Type__c = 'Initial Tryout',
+                    Attended__c = true
+                )
+            );
+        }
+        return tryoutParticipants;
+    }
+
+    public static List<Player_Evaluation__c> createPlayerEvaluations(
+        List<Tryout_Participant__c> participants,
+        List<Contact> evaluators
+    ) {
+        List<Player_Evaluation__c> evaluations = new List<Player_Evaluation__c>();
+        for (Tryout_Participant__c participant : participants) {
+            for (Contact evaluator : evaluators) {
+                evaluations.add(
+                    new Player_Evaluation__c(
+                        Tryout_Participant__c = participant.Id,
+                        Player__c = participant.Contact__c,
+                        Evaluator__c = evaluator.Id,
+                        Booking__c = participant.Booking__c
+                    )
+                );
+            }
+        }
+        return evaluations;
     }
 
 
