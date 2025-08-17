@@ -1,5 +1,9 @@
 public class BatchUtilities {
     
+    /*
+    * TODO - Deprecate this method in favor of the version in CommonUtilities
+    *        Need to remove from batch classes first
+    */
     public static Boolean isOrgEmailEnabled() {
         Boolean emailDeliverabilityEnabled = true;
         try {
@@ -11,7 +15,7 @@ public class BatchUtilities {
         return emailDeliverabilityEnabled;
     }
 
-    public static void publishBatchResultEvent(AsyncApexJob apexJob, String results) {
+    public static Database.SaveResult publishBatchResultEvent(AsyncApexJob apexJob, String results) {
         Batch_Result__e batchResultEvent = new Batch_Result__e();
         batchResultEvent.Job_ID__c = apexJob.Id;
         batchResultEvent.Batch_Class__c = apexJob.ApexClass.Name;
@@ -22,12 +26,12 @@ public class BatchUtilities {
         if (results != null) {
             batchResultEvent.Results__c = results;
         }
-        Database.SaveResult sr = EventBus.publish(batchResultEvent);
+        return EventBus.publish(batchResultEvent);
     }
 
     public static void sendJobCreatorEmailResult(AsyncApexJob apexJob) {
         String createdByEmail = apexJob.CreatedBy.Email;
-        if (isOrgEmailEnabled() && !createdByEmail.startsWith('autoproc')) {
+        if (CommonUtilities.isOrgEmailEnabled() && !createdByEmail.startsWith('autoproc')) {
             Messaging.SingleEmailMessage email = new Messaging.SingleEmailMessage();
             String[] toAddress = new String[] {createdByEmail};
             email.setToAddresses(toAddress);
