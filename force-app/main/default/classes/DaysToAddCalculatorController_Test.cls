@@ -16,7 +16,7 @@ private class DaysToAddCalculatorController_Test {
         sampleOption = DaysToAddCalculatorController.getSampleCourseOption(programId, sessionId);
         Test.stopTest();
 
-        Assert.isNotNull(sampleOption, 'Should have received a sample course option for the program and session');
+        System.Assert.isNotNull(sampleOption, 'Should have received a sample course option for the program and session');
 
         TREX1__Course_Session_Option__c cso = [
             SELECT TREX1__Course_Session__r.TREX1__Session__c, TREX1__Course_Session__r.TREX1__Course__r.TREX1__Program__c
@@ -25,12 +25,12 @@ private class DaysToAddCalculatorController_Test {
              LIMIT 1
         ];
 
-        Assert.areEqual(
+        System.Assert.areEqual(
             sessionId, 
             cso.TREX1__Course_Session__r.TREX1__Session__c, 
             'Course option should be within the provided session'
         );
-        Assert.areEqual(
+        System.Assert.areEqual(
             programId, 
             cso.TREX1__Course_Session__r.TREX1__Course__r.TREX1__Program__c, 
             'Course option should be within the provided program'
@@ -49,9 +49,9 @@ private class DaysToAddCalculatorController_Test {
         System.runAs(u) {
             try {
                 sampleOption = DaysToAddCalculatorController.getSampleCourseOption(programId, sessionId);
-                Assert.fail('Should not have been able to retrieve sample course option without object/fls');
+                System.Assert.fail('Should not have been able to retrieve sample course option without object/fls');
             } catch (Exception e) {
-                Assert.areEqual(
+                System.Assert.areEqual(
                     'System.AuraHandledException', 
                     e.getTypeName(), 
                     'Should have received an aura handled exception'

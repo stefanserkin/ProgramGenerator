@@ -1,0 +1,8 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<ValidationRule xmlns="http://soap.sforce.com/2006/04/metadata">
+    <fullName>FacilityLocationMustMatchProgramLocation</fullName>
+    <active>true</active>
+    <description>The booking&apos;s facility must be within the staged program&apos;s location</description>
+    <errorConditionFormula>Facility__r.TREX1__Location__c &lt;&gt; Staged_Program__r.Location__c</errorConditionFormula>
+    <errorMessage>The booking&apos;s facility must be within the staged program&apos;s location</errorMessage>
+</ValidationRule>

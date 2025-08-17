@@ -14,6 +14,7 @@ public with sharing class DaysToAddCalculatorController {
                                WHERE TREX1__Course_Session__r.TREX1__Course__r.TREX1__Program__c = :programId
                                  AND TREX1__Course_Session__r.TREX1__Session__c = :sessionId)
                   WITH USER_MODE
+                 ORDER BY TREX1__Start_Date__c ASC
                  LIMIT 1
             ];
         } catch (Exception e) {

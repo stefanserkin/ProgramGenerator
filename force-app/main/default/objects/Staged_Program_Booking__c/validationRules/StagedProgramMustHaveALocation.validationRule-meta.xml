@@ -1,0 +1,8 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<ValidationRule xmlns="http://soap.sforce.com/2006/04/metadata">
+    <fullName>StagedProgramMustHaveALocation</fullName>
+    <active>true</active>
+    <description>Set a location before creating staged program bookings</description>
+    <errorConditionFormula>ISBLANK( Staged_Program__r.Location__c )</errorConditionFormula>
+    <errorMessage>Set a location before creating staged program bookings</errorMessage>
+</ValidationRule>

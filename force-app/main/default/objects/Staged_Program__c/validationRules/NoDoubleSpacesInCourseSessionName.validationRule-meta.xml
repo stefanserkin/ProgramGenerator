@@ -1,0 +1,9 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<ValidationRule xmlns="http://soap.sforce.com/2006/04/metadata">
+    <fullName>NoDoubleSpacesInCourseSessionName</fullName>
+    <active>true</active>
+    <description>Remove any double spaces from the course session name</description>
+    <errorConditionFormula>CONTAINS( Course_Session_Name__c, &quot;  &quot; )</errorConditionFormula>
+    <errorDisplayField>Course_Session_Name__c</errorDisplayField>
+    <errorMessage>Remove any double spaces from the course session name</errorMessage>
+</ValidationRule>
