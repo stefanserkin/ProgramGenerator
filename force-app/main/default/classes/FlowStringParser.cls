@@ -3,7 +3,9 @@ public with sharing class FlowStringParser {
     @InvocableMethod(
         label='Parse Text' 
         description='Provide a semi-colon separated string (such as input from a MSP) and receive a collection of strings' 
-        category='Utilities')
+        category='Utilities'
+        iconName='resource:agGlyph:Layer_1'
+    )
     public static List<Result> parseText(List<Request> lstRequests) {
         List<Result> lstResults = new List<Result>();
         for (Request req : lstRequests) {

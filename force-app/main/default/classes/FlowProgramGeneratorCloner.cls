@@ -3,7 +3,7 @@
  ****************************************************/
 public with sharing class FlowProgramGeneratorCloner {
 
-    @InvocableMethod(label='Generate Staged Programs' category='Traction Rec')
+    @InvocableMethod(label='Generate Staged Programs' category='Traction Rec' iconName='resource:agGlyph:Layer_1')
     public static List<Result> createStagedPrograms(List<Request> requests) {
         List<Result> results = new List<Result>();
         for (Request request : requests) {

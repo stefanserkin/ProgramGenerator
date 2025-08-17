@@ -1,6 +1,6 @@
 public with sharing class FlowProgramGeneratorBatch {
 
-    @InvocableMethod(label='Run Program Generator Batch' category='Traction Rec')
+    @InvocableMethod(label='Run Program Generator Batch' category='Traction Rec' iconName='resource:agGlyph:Layer_1')
     public static List<Result> runProgramGeneratorBatch(List<Request> requests) {
         List<Result> results = new List<Result>();
         for (Request request : requests) {
@@ -23,4 +23,5 @@ public with sharing class FlowProgramGeneratorBatch {
         @InvocableVariable(label='Job ID' required=true)
         public String jobId;
     }
+    
 }
