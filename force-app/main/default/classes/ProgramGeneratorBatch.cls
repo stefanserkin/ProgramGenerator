@@ -12,6 +12,7 @@ public without sharing class ProgramGeneratorBatch implements Database.Batchable
     private Id stagedProgramBatchId;
     private Boolean isProcessing = false;
     private List<TREX1__Course_Option__c> courseOptions;
+    private List<String> errorMessages = new List<String>();
 
     public ProgramGeneratorBatch(Id stagedProgramBatchId) {
         this.stagedProgramBatchId = stagedProgramBatchId;
@@ -41,11 +42,14 @@ public without sharing class ProgramGeneratorBatch implements Database.Batchable
             List<TREX1__Course_Option__c> lstOptions = service.run();
             this.courseOptions.addAll(lstOptions);
         } catch (Exception e) {
+            errorMessages.add('Error Type: ' + e.getTypeName() + '. ' + e.getCause() + ': ' + e.getMessage());
+            /*
             Staged_Program_Batch__c spBatch = new Staged_Program_Batch__c();
             spBatch.Id = this.stagedProgramBatchId;
             spBatch.Status__c = STATUS_FAILED;
             spBatch.Error_Log__c = e.getMessage();
             Database.update(spBatch, AccessLevel.SYSTEM_MODE);
+            */
         }
     }
 
@@ -72,27 +76,8 @@ public without sharing class ProgramGeneratorBatch implements Database.Batchable
             Database.executeBatch(bookingBatch, 50);
         }
 
-        AsyncApexJob apexJob = [
-            SELECT Id, 
-                   Status, 
-                   NumberOfErrors, 
-                   JobItemsProcessed, 
-                   TotalJobItems, 
-                   CreatedBy.Email
-              FROM AsyncApexJob 
-             WHERE Id = :bc.getJobId()
-        ];
-
-        String createdByEmail = apexJob.CreatedBy.Email;
-        if (BatchUtilities.isOrgEmailEnabled() && !createdByEmail.startsWith('autoproc')) {
-            Messaging.SingleEmailMessage email = new Messaging.SingleEmailMessage();
-            String[] toAddress = new String[] {createdByEmail};
-            email.setToAddresses(toAddress);
-            email.setSubject(apexJob.Status + ': ' + BATCH_NAME);
-            String batchRecordUrl = URL.getOrgDomainUrl() + '/' + this.stagedProgramBatchId;
-            email.setPlainTextBody('The ' + BATCH_NAME + ' has completed for batch job with Job ID ' + apexJob.Id + '. View Batch Results: ' + batchRecordUrl);
-            Messaging.sendEmail(new Messaging.SingleEmailMessage[] { email });
-        }
+        AsyncApexJob apexJob = BatchUtilities.getAsyncApexJobById(bc.getJobId());
+        BatchUtilities.sendJobCreatorEmailResult(apexJob);
     }
 
 }

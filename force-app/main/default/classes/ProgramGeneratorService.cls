@@ -282,6 +282,11 @@ public without sharing class ProgramGeneratorService {
             co.TREX1__Early_Register_Online_From_Time__c = '12:00 AM';
             co.TREX1__Early_Register_Online_To_Time__c = '11:59 PM';
             co.TREX1__Early_Register_To_Time__c = '11:59 PM';
+
+            // Website availability
+            co.Available_On_Website__c = co.TREX1__Available_Online__c;
+            co.TREX1__Available_Online_From__c = Datetime.newInstance(co.TREX1__Register_Online_From_Date__c, Time.newInstance(8, 30, 0, 0));
+            co.TREX1__Available_Online_To__c = Datetime.newInstance(co.TREX1__Register_Online_To_Date__c, Time.newInstance(11, 0, 0, 0));
             
             co.TREX1__Legacy_Id__c = sp.Id;
             lstOptions.add(co);
@@ -548,6 +553,31 @@ public without sharing class ProgramGeneratorService {
             gbgId = lstGbgs[0].Id;
         }
         return gbgId;
+    }
+
+    /**
+     * Convert a validated 12-hour time string (e.g., "8:00 AM", "12:15 pm")
+     * into a Time. Assumes formatting per:
+     * (0?[1-9]|1[012]):[0-5]\d\s[APap][mM]
+     *
+     * @param input The validated time string, or null/blank.
+     * @return Time value with seconds/millis = 0, or null if input is blank.
+     */
+    public static Time parse12HourTextValidated(String input) {
+        if (String.isBlank(input)) return null;
+
+        String s = input.trim();
+        List<String> parts = s.split('\\s'); // "<h>:<mm>" and "AM|PM"
+        List<String> hm = parts[0].split(':');
+
+        Integer hour12 = Integer.valueOf(hm[0]);
+        Integer minute = Integer.valueOf(hm[1]);
+        String ampm = parts[1].toUpperCase();
+
+        Integer hour24 = hour12 % 12;
+        if (ampm == 'PM') hour24 += 12;
+
+        return Time.newInstance(hour24, minute, 0, 0);
     }
 
 }
