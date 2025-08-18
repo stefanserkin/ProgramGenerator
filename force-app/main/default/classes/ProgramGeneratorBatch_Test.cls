@@ -26,44 +26,29 @@ private class ProgramGeneratorBatch_Test {
         Id batchId = Database.executeBatch(pgb, 20);
         Test.stopTest();
 
-        List<TREX1__Course_Option__c> lstCos = [
-            SELECT Id FROM TREX1__Course_Option__c WHERE Staged_Program_Batch__c = :stagedProgramBatchId
-        ];
-        
-        Assert.areEqual(
-            NUM_COURSE_OPTIONS, 
-            lstCos.size(), 
-            'Should have received ' + NUM_COURSE_OPTIONS + ' course options'
-        );
+        List<TREX1__Course_Option__c> lstCos = [SELECT Id FROM TREX1__Course_Option__c WHERE Staged_Program_Batch__c = :stagedProgramBatchId];
+        System.Assert.areEqual(NUM_COURSE_OPTIONS, lstCos.size(), 'Should have received ' + NUM_COURSE_OPTIONS + ' course options');
     }
 
     @IsTest
     static void testBatchWithException() {
-        TREX1__Program__c program = [SELECT Id FROM TREX1__Program__c LIMIT 1];
-        TREX1__Session__c session = TestDataFactory.createSessions(1).get(0);
-        insert session;
+        String testErrorMessage = 'Ruhroh';
 
-        Staged_Program_Batch__c spb = TestDataFactory.createStagedProgramBatches(session, 1).get(0);
-        insert spb;
+        Staged_Program__c sp = [SELECT Id, Status__c, Staged_Program_Batch__c FROM Staged_Program__c LIMIT 1];
+        sp.Status__c = 'Error';
+        sp.Error_Message__c = 'Ruhroh';
+        update sp;
 
-        // Create upper east side location to force error when no free membership type is defined
-        TREX1__Location__c location = TestDataFactory.createLocations(1).get(0);
-        location.Name = 'Upper East Side';
-        insert location;
+        ProgramGeneratorBatch pgb = new ProgramGeneratorBatch(sp.Staged_Program_Batch__c);
+        pgb.errorMessages.add(testErrorMessage);
 
-        Staged_Program__c stagedProgram = TestDataFactory.createStagedPrograms(spb, program, 1).get(0);
-        stagedProgram.Location__c = location.Id;
-        stagedProgram.Session__c = session.Id;
-        insert stagedProgram;
-        
         Test.startTest();
-        ProgramGeneratorBatch pgb = new ProgramGeneratorBatch(spb.Id);
-        Id batchId = Database.executeBatch(pgb, 20);
+        Id jobId = Database.executeBatch(pgb, 50);
         Test.stopTest();
 
-        Staged_Program_Batch__c refreshedBatch = [SELECT Status__c FROM Staged_Program_Batch__c WHERE Id = :spb.Id LIMIT 1];
-
-        Assert.areEqual('Processed with Errors', refreshedBatch.Status__c, 'Should have received a failed batch status');
+        Staged_Program_Batch__c spb = [SELECT Id, Status__c, Error_Log__c FROM Staged_Program_Batch__c WHERE Id = :sp.Staged_Program_Batch__c LIMIT 1];
+        System.Assert.areEqual('Processed with Errors', spb.Status__c, 'Received unexpected status');
+        System.Assert.isTrue(spb.Error_Log__c.contains(testErrorMessage), 'The collection of batch error messages should include the test message');
     }
 
 }

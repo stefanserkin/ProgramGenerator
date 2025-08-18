@@ -29,6 +29,11 @@ public class BatchUtilities {
         return EventBus.publish(batchResultEvent);
     }
 
+    public static void sendJobCreatorEmailResult(Id asyncApexJobId) {
+        AsyncApexJob apexJob = getAsyncApexJobById(asyncApexJobId);
+        sendJobCreatorEmailResult(apexJob);
+    }
+
     public static void sendJobCreatorEmailResult(AsyncApexJob apexJob) {
         String createdByEmail = apexJob.CreatedBy.Email;
         if (CommonUtilities.isOrgEmailEnabled() && !createdByEmail.startsWith('autoproc')) {

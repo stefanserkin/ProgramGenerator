@@ -12,6 +12,8 @@ public without sharing class ProgramGeneratorBatch implements Database.Batchable
     private Id stagedProgramBatchId;
     private Boolean isProcessing = false;
     private List<TREX1__Course_Option__c> courseOptions;
+
+    @TestVisible
     private List<String> errorMessages = new List<String>();
 
     public ProgramGeneratorBatch(Id stagedProgramBatchId) {
@@ -23,33 +25,27 @@ public without sharing class ProgramGeneratorBatch implements Database.Batchable
     }
 
     public void execute(Database.BatchableContext bc, List<Staged_Program__c> lstStagedPrograms) {
-        if (!this.isProcessing) {
-            update (new Staged_Program_Batch__c(Id = this.stagedProgramBatchId, Status__c = STATUS_PROCESSING));
-            this.isProcessing = true;
-        }
-
-        if (this.courseOptions == null) {
-            this.courseOptions = new List<TREX1__Course_Option__c>();
-        }
-
-        Set<Id> setStagedProgramIds = new Set<Id>();
-        for (Staged_Program__c sp : lstStagedPrograms) {
-            setStagedProgramIds.add(sp.Id);
-        }
-
-        ProgramGeneratorService service = new ProgramGeneratorService(setStagedProgramIds);
         try {
+            if (!this.isProcessing) {
+                update (new Staged_Program_Batch__c(Id = this.stagedProgramBatchId, Status__c = STATUS_PROCESSING));
+                this.isProcessing = true;
+            }
+
+            if (this.courseOptions == null) {
+                this.courseOptions = new List<TREX1__Course_Option__c>();
+            }
+
+            Set<Id> setStagedProgramIds = new Set<Id>();
+            for (Staged_Program__c sp : lstStagedPrograms) {
+                setStagedProgramIds.add(sp.Id);
+            }
+
+            ProgramGeneratorService service = new ProgramGeneratorService(setStagedProgramIds);
+
             List<TREX1__Course_Option__c> lstOptions = service.run();
             this.courseOptions.addAll(lstOptions);
         } catch (Exception e) {
             errorMessages.add('Error Type: ' + e.getTypeName() + '. ' + e.getCause() + ': ' + e.getMessage());
-            /*
-            Staged_Program_Batch__c spBatch = new Staged_Program_Batch__c();
-            spBatch.Id = this.stagedProgramBatchId;
-            spBatch.Status__c = STATUS_FAILED;
-            spBatch.Error_Log__c = e.getMessage();
-            Database.update(spBatch, AccessLevel.SYSTEM_MODE);
-            */
         }
     }
 
@@ -65,8 +61,15 @@ public without sharing class ProgramGeneratorBatch implements Database.Batchable
         if (batch.Staged_Programs__r.isEmpty()) {
             batch.Status__c = STATUS_COMPLETE;
             batch.Batch_Completed_Date_Time__c = System.now();
-            Database.update(batch, AccessLevel.SYSTEM_MODE);
+        } else {
+            batch.Status__c = STATUS_FAILED;
+            if (!errorMessages.isEmpty()) {
+                batch.Error_Log__c = String.join(errorMessages, '\n');
+            }
         }
+        Database.update(batch, AccessLevel.SYSTEM_MODE);
+
+        BatchUtilities.sendJobCreatorEmailResult(bc.getJobId());
 
         if (!Test.isRunningTest() && !this.courseOptions.isEmpty()) {
             TRecCourseOptionBookingBatch bookingBatch = new TRecCourseOptionBookingBatch(
@@ -75,9 +78,6 @@ public without sharing class ProgramGeneratorBatch implements Database.Batchable
             );
             Database.executeBatch(bookingBatch, 50);
         }
-
-        AsyncApexJob apexJob = BatchUtilities.getAsyncApexJobById(bc.getJobId());
-        BatchUtilities.sendJobCreatorEmailResult(apexJob);
     }
 
 }

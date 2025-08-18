@@ -19,7 +19,7 @@ private class TRecCourseOptionBookingBatch_Test {
         jobId = Database.executeBatch(batch);
         Test.stopTest();
 
-        Assert.isNotNull(jobId, 'Should have received a job id');
+        System.Assert.isNotNull(jobId, 'Should have received a job id');
     }
 
     @IsTest
@@ -33,7 +33,7 @@ private class TRecCourseOptionBookingBatch_Test {
         jobId = Database.executeBatch(batch);
         Test.stopTest();
 
-        Assert.isNotNull(jobId, 'Should have received a job id');
+        System.Assert.isNotNull(jobId, 'Should have received a job id');
     }
 
 }

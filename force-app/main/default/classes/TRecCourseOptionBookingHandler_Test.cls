@@ -33,12 +33,12 @@ private class TRecCourseOptionBookingHandler_Test {
         );
         Test.stopTest();
 
-        System.assertEquals(2, bookings.size(), 'Should create bookings for two days');
+        System.Assert.areEqual(2, bookings.size(), 'Should create bookings for two days');
         for (TREX1__Booking__c bk : bookings) {
-            System.assertEquals('Draft', bk.TREX1__Status__c, 'Booking status should be Draft');
-            System.assertEquals(testCourseOption.Id, bk.TREX1__Course_Option__c, 'Booking should be linked to the course option');
-            System.assertNotEquals(null, bk.TREX1__Start_Time__c, 'Start time should not be null');
-            System.assertNotEquals(null, bk.TREX1__End_Time__c, 'End time should not be null');
+            System.Assert.areEqual('Draft', bk.TREX1__Status__c, 'Booking status should be Draft');
+            System.Assert.areEqual(testCourseOption.Id, bk.TREX1__Course_Option__c, 'Booking should be linked to the course option');
+            System.Assert.areNotEqual(null, bk.TREX1__Start_Time__c, 'Start time should not be null');
+            System.Assert.areNotEqual(null, bk.TREX1__End_Time__c, 'End time should not be null');
         }
     }
 
@@ -62,7 +62,7 @@ private class TRecCourseOptionBookingHandler_Test {
         List<TREX1__Booking__c> bookings = TRecCourseOptionBookingHandler.createBookingsForCourseOptions(courseOptionsIds);
         Test.stopTest();
 
-        System.assertEquals(0, bookings.size(), 'No bookings should be created for missing data');
+        System.Assert.areEqual(0, bookings.size(), 'No bookings should be created for missing data');
     }
 
     @IsTest
@@ -84,7 +84,7 @@ private class TRecCourseOptionBookingHandler_Test {
              WHERE Booking_Date__c = :exceptionDate
         ];
 
-        Assert.isTrue(lstExceptionDateBookings.isEmpty(), 'No booking should be created on the exception date');
+        System.Assert.isTrue(lstExceptionDateBookings.isEmpty(), 'No booking should be created on the exception date');
     }
 
     @IsTest
@@ -109,7 +109,7 @@ private class TRecCourseOptionBookingHandler_Test {
              WHERE Booking_Date__c IN :lstExceptionDates
         ];
 
-        Assert.isTrue(lstExceptionDateBookings.isEmpty(), 'No booking should be created on the exception date');
+        System.Assert.isTrue(lstExceptionDateBookings.isEmpty(), 'No booking should be created on the exception date');
     }
 
     @IsTest
@@ -136,12 +136,10 @@ private class TRecCourseOptionBookingHandler_Test {
         );
         Test.stopTest();
 
-        Assert.isTrue(bookings.isEmpty(), 'Should not have received any bookings while the opt out is enabled');
+        System.Assert.isTrue(bookings.isEmpty(), 'Should not have received any bookings while the opt out is enabled');
     }
     
-    private static TREX1__Course_Option__c createTestCourseOption(
-        String exceptionDates
-    ) {
+    private static TREX1__Course_Option__c createTestCourseOption(String exceptionDates) {
         TREX1__Facility__c primaryFacility = [SELECT Id FROM TREX1__Facility__c LIMIT 1];
 
         return new TREX1__Course_Option__c(

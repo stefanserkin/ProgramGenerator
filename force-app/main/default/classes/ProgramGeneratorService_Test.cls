@@ -32,8 +32,8 @@ private class ProgramGeneratorService_Test {
                            WHERE Id = :sp.Id)
              LIMIT 1
         ];
-        Assert.areEqual('Processed', refreshedSp.Status__c, 'Final status should be processed');
-        Assert.areEqual(sp.Capacity__c, co.TREX1__Capacity__c, 'Should have received the capacity from the staged program');
+        System.Assert.areEqual('Processed', refreshedSp.Status__c, 'Final status should be processed');
+        System.Assert.areEqual(sp.Capacity__c, co.TREX1__Capacity__c, 'Should have received the capacity from the staged program');
     }
 
     @IsTest
@@ -58,8 +58,8 @@ private class ProgramGeneratorService_Test {
                            WHERE Id = :sp.Id)
              LIMIT 1
         ];
-        Assert.areEqual('Processed', refreshedSp.Status__c, 'Final status should be processed');
-        Assert.isTrue(co.TREX1__Unnamed_Group_Registration__c, 'Should be anonymous ticket');
+        System.Assert.areEqual('Processed', refreshedSp.Status__c, 'Final status should be processed');
+        System.Assert.isTrue(co.TREX1__Unnamed_Group_Registration__c, 'Should be anonymous ticket');
     }
     
 }

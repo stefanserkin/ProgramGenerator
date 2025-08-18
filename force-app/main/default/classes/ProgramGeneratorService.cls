@@ -51,34 +51,30 @@ public without sharing class ProgramGeneratorService {
      * @returns void
      */
     public List<TREX1__Course_Option__c> run() {
-        try {
-            // Get map of course sessions
-            Map<String, TREX1__Course_Session__c> mapCourseSessions = getCourseSessionMap();
+        // Get map of course sessions
+        Map<String, TREX1__Course_Session__c> mapCourseSessions = getCourseSessionMap();
 
-            // Get map of products
-            Map<String, TREX1__Product__c> mapProducts = getProductMap();
+        // Get map of products
+        Map<String, TREX1__Product__c> mapProducts = getProductMap();
 
-            // Create course options
-            List<TREX1__Course_Option__c> lstCos = createCourseOptions();
+        // Create course options
+        List<TREX1__Course_Option__c> lstCos = createCourseOptions();
 
-            // Update staged programs
-            List<Staged_Program__c> lstStagedProgramsToUpdate = new List<Staged_Program__c>();
-            for (Staged_Program__c sp : stagedPrograms.values()) {
-                lstStagedProgramsToUpdate.add(
-                    new Staged_Program__c(
-                        Id = sp.Id,
-                        Status__c = STATUS_PROCESSED,
-                        Course_Session__c = courseSessions.get(sp.Course_Session_Key__c).Id,
-                        Course_Option__c = courseOptions.get(sp.Id).Id
-                    )
-                );
-            }
-            Database.update(lstStagedProgramsToUpdate, true, AccessLevel.SYSTEM_MODE);
-            
-            return lstCos;
-        } catch (Exception e) {
-            throw e;
+        // Update staged programs
+        List<Staged_Program__c> lstStagedProgramsToUpdate = new List<Staged_Program__c>();
+        for (Staged_Program__c sp : stagedPrograms.values()) {
+            lstStagedProgramsToUpdate.add(
+                new Staged_Program__c(
+                    Id = sp.Id,
+                    Status__c = STATUS_PROCESSED,
+                    Course_Session__c = courseSessions.get(sp.Course_Session_Key__c).Id,
+                    Course_Option__c = courseOptions.get(sp.Id).Id
+                )
+            );
         }
+        Database.update(lstStagedProgramsToUpdate, true, AccessLevel.SYSTEM_MODE);
+        
+        return lstCos;
     }
 
     /**
@@ -148,9 +144,7 @@ public without sharing class ProgramGeneratorService {
     /**
      * Create course sessions for unmatched course session keys in staged programs
      */
-    private List<TREX1__Course_Session__c> createNewCourseSessions(
-        List<Staged_Program__c> lstStagedPrograms
-    ) {
+    private List<TREX1__Course_Session__c> createNewCourseSessions(List<Staged_Program__c> lstStagedPrograms) {
         List<TREX1__Course_Session__c> lstCourseSessions = new List<TREX1__Course_Session__c>();
 
         for (Staged_Program__c newCsSp : lstStagedPrograms) {
@@ -209,6 +203,7 @@ public without sharing class ProgramGeneratorService {
 
             TREX1__Course_Option__c co = new TREX1__Course_Option__c();
             co.Staged_Program_Batch__c = sp.Staged_Program_Batch__c;
+            co.Staged_Program__c = sp.Id;
             co.Name = sp.Course_Option_Name__c.left(80);
             co.TREX1__Code__c = sp.Course_Option_Code__c;
             co.TREX1__Type__c = COURSE_OPTION_TYPE;
@@ -285,8 +280,8 @@ public without sharing class ProgramGeneratorService {
 
             // Website availability
             co.Available_On_Website__c = co.TREX1__Available_Online__c;
-            co.TREX1__Available_Online_From__c = Datetime.newInstance(co.TREX1__Register_Online_From_Date__c, Time.newInstance(8, 30, 0, 0));
-            co.TREX1__Available_Online_To__c = Datetime.newInstance(co.TREX1__Register_Online_To_Date__c, Time.newInstance(11, 0, 0, 0));
+            co.Website_Availability_Start__c = Datetime.newInstance(co.TREX1__Register_Online_From_Date__c, CommonUtilities.parseTimeString(co.TREX1__Register_From_Time__c));
+            co.Website_Availability_End__c = Datetime.newInstance(co.TREX1__Register_Online_To_Date__c, CommonUtilities.parseTimeString(co.TREX1__Register_To_Time__c));
             
             co.TREX1__Legacy_Id__c = sp.Id;
             lstOptions.add(co);
@@ -315,9 +310,7 @@ public without sharing class ProgramGeneratorService {
     /**
      * Create new products, price levels, and pbs for unmatched price level keys
      */
-    private List<TREX1__Product__c> createNewProducts(
-        List<Staged_Program__c> lstStagedPrograms
-    ) {
+    private List<TREX1__Product__c> createNewProducts(List<Staged_Program__c> lstStagedPrograms) {
         // Products
         List<TREX1__Product__c> lstProducts = new List<TREX1__Product__c>();
         for (Staged_Program__c sp : lstStagedPrograms) {
@@ -375,10 +368,7 @@ public without sharing class ProgramGeneratorService {
     /**
      * Returns a single price level sobject for a given produce and price type
      */
-    private TREX1__Price_Level__c getNewPriceLevel(
-        TREX1__Product__c product,
-        String priceType
-    ) {
+    private TREX1__Price_Level__c getNewPriceLevel(TREX1__Product__c product, String priceType) {
         Staged_Program__c sp = mapProdKeyToStagedProgram.get(product.Key__c);
         // TREX1__Session__c session = getSessionMap().get(sp.Session__c);
 
@@ -416,9 +406,7 @@ public without sharing class ProgramGeneratorService {
     /**
      * Query for existing course sessions records based on a set of course session keys
      */
-    private List<TREX1__Course_Session__c> queryForCourseSessions(
-        Set<String> setCourseSessionKeys
-    ) {
+    private List<TREX1__Course_Session__c> queryForCourseSessions(Set<String> setCourseSessionKeys) {
         return [
             SELECT Id, 
                    Name, 
@@ -432,9 +420,7 @@ public without sharing class ProgramGeneratorService {
     /**
      * Query for existing product records based on a set of price level keys
      */
-    private List<TREX1__Product__c> queryForProducts(
-        Set<String> setPriceLevelKeys
-    ) {
+    private List<TREX1__Product__c> queryForProducts(Set<String> setPriceLevelKeys) {
         return [
             SELECT Id, 
                    Name,
@@ -487,9 +473,7 @@ public without sharing class ProgramGeneratorService {
     /**
      * Query for staged program details
      */
-    private Map<Id, Staged_Program__c> queryForStagedPrograms(
-        Set<Id> stagedProgramIds
-    ) {
+    private Map<Id, Staged_Program__c> queryForStagedPrograms(Set<Id> stagedProgramIds) {
         return new Map<Id, Staged_Program__c>([
             SELECT Id,
                    Staged_Program_Batch__c,
@@ -553,31 +537,6 @@ public without sharing class ProgramGeneratorService {
             gbgId = lstGbgs[0].Id;
         }
         return gbgId;
-    }
-
-    /**
-     * Convert a validated 12-hour time string (e.g., "8:00 AM", "12:15 pm")
-     * into a Time. Assumes formatting per:
-     * (0?[1-9]|1[012]):[0-5]\d\s[APap][mM]
-     *
-     * @param input The validated time string, or null/blank.
-     * @return Time value with seconds/millis = 0, or null if input is blank.
-     */
-    public static Time parse12HourTextValidated(String input) {
-        if (String.isBlank(input)) return null;
-
-        String s = input.trim();
-        List<String> parts = s.split('\\s'); // "<h>:<mm>" and "AM|PM"
-        List<String> hm = parts[0].split(':');
-
-        Integer hour12 = Integer.valueOf(hm[0]);
-        Integer minute = Integer.valueOf(hm[1]);
-        String ampm = parts[1].toUpperCase();
-
-        Integer hour24 = hour12 % 12;
-        if (ampm == 'PM') hour24 += 12;
-
-        return Time.newInstance(hour24, minute, 0, 0);
     }
 
 }

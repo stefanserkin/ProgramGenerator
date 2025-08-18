@@ -1026,19 +1026,17 @@ public class TestDataFactory {
      * No DML - returns unsaved list of sObjects
      * @param Integer Number of records to create
      */
-    public static List<TREX1__GL_Account__c> createGlAccounts(
-        Integer numberOfAccounts
-    ) {
+    public static List<TREX1__GL_Account__c> createGlAccounts(Integer numberOfAccounts) {
         List<TREX1__GL_Account__c> lstGlAccounts = new List<TREX1__GL_Account__c>();
         for (Integer i = 0; i < numberOfAccounts; i++) {
-            lstGlAccounts.add(
+            TREX1__GL_Account__c glAcc = 
                 new TREX1__GL_Account__c(
                     Name = GL_ACCOUNT_BASE_NAME + String.valueOf(glCodeIncrementer),
                     TREX1__Active__c = true,
                     TREX1__GL_Account_Number__c = GL_ACCOUNT_BASE_CODE + String.valueOf(glCodeIncrementer),
                     TREX1__Type__c = GL_ACCOUNT_TYPE_INCOME
-                )
             );
+            lstGlAccounts.add(glAcc);
             glCodeIncrementer++;
         }
         return lstGlAccounts;

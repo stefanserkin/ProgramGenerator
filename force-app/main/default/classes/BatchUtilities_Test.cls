@@ -81,6 +81,31 @@ private class BatchUtilities_Test {
     }
 
     @IsTest
+    static void testSendJobCreatorEmailResultFromId() {
+        Boolean sentSuccessfully = false;
+
+        TREX1__Session__c session = TestDataFactory.createSessions(1).get(0);
+        insert session;
+
+        Staged_Program_Batch__c stagedProgramBatch = TestDataFactory.createStagedProgramBatches(session, 1).get(0);
+        insert stagedProgramBatch;
+
+        ProgramGeneratorBatch pgb = new ProgramGeneratorBatch(stagedProgramBatch.Id);
+
+        Test.startTest();
+        try {
+            Id jobId = Database.executeBatch(pgb, 50);
+            BatchUtilities.sendJobCreatorEmailResult(jobId);
+            sentSuccessfully = true;
+        } catch (Exception e) {
+            System.Assert.fail('Should have called the sendJobCreatorEmailResult() method without an exception');
+        }
+        Test.stopTest();
+
+        System.Assert.isTrue(sentSuccessfully, 'Should have called the sendJobCreatorEmailResult() method without an exception');
+    }
+
+    @IsTest
     static void testGetAsyncApexJobById() {
         TREX1__Session__c session = TestDataFactory.createSessions(1).get(0);
         insert session;

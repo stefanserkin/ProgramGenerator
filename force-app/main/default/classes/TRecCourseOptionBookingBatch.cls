@@ -20,10 +20,9 @@ public without sharing class TRecCourseOptionBookingBatch implements Database.Ba
         return bsof;
     }
 
-    public void execute(Database.BatchableContext BC, List<sObject> scope) {
+    public void execute(Database.BatchableContext BC, List<TREX1__Course_Option__c> scope) {
         Set<Id> courseOptionIds = new Set<Id>();
-        for (sObject obj : scope) {
-            TREX1__Course_Option__c co = (TREX1__Course_Option__c) obj;
+        for (TREX1__Course_Option__c co : scope) {
             courseOptionIds.add(co.Id);
         }
 
@@ -35,25 +34,7 @@ public without sharing class TRecCourseOptionBookingBatch implements Database.Ba
     }
 
     public void finish(Database.BatchableContext BC) {
-        AsyncApexJob apexJob = [
-            SELECT Id, 
-                   Status, 
-                   NumberOfErrors, 
-                   JobItemsProcessed, 
-                   TotalJobItems, 
-                   CreatedBy.Email
-              FROM AsyncApexJob 
-             WHERE Id = :bc.getJobId()
-        ];
-        
-        String createdByEmail = apexJob.CreatedBy.Email;
-        if (BatchUtilities.isOrgEmailEnabled() && !createdByEmail.startsWith('autoproc')) {
-            Messaging.SingleEmailMessage email = new Messaging.SingleEmailMessage();
-            email.setToAddresses(new List<String>{ ADMIN_EMAIL });
-            email.setSubject(apexJob.Status + ': ' + BATCH_NAME);
-            email.setPlainTextBody('The ' + BATCH_NAME + ' ran and processed ' + apexJob.TotalJobItems + ' batches with ' + apexJob.NumberOfErrors + ' failures. Job Id: ' + apexJob.Id);
-            Messaging.sendEmail(new Messaging.SingleEmailMessage[] { email });
-        }
+        BatchUtilities.sendJobCreatorEmailResult(bc.getJobId());
     }
 
 }
