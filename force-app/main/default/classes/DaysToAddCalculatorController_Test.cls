@@ -19,7 +19,7 @@ private class DaysToAddCalculatorController_Test {
         System.Assert.isNotNull(sampleOption, 'Should have received a sample course option for the program and session');
 
         TREX1__Course_Session_Option__c cso = [
-            SELECT TREX1__Course_Session__r.TREX1__Session__c, TREX1__Course_Session__r.TREX1__Course__r.TREX1__Program__c
+            SELECT TREX1__cso_Course_Session__r.TREX1__Session__c, TREX1__cso_Course_Session__r.TREX1__Course__r.TREX1__Program__c
               FROM TREX1__Course_Session_Option__c
              WHERE TREX1__Course_Option__c = :sampleOption.Id
              LIMIT 1
@@ -27,12 +27,12 @@ private class DaysToAddCalculatorController_Test {
 
         System.Assert.areEqual(
             sessionId, 
-            cso.TREX1__Course_Session__r.TREX1__Session__c, 
+            cso.TREX1__cso_Course_Session__r.TREX1__Session__c, 
             'Course option should be within the provided session'
         );
         System.Assert.areEqual(
             programId, 
-            cso.TREX1__Course_Session__r.TREX1__Course__r.TREX1__Program__c, 
+            cso.TREX1__cso_Course_Session__r.TREX1__Course__r.TREX1__Program__c, 
             'Course option should be within the provided program'
         );
     }

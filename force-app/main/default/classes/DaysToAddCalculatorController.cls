@@ -11,8 +11,8 @@ public with sharing class DaysToAddCalculatorController {
                  WHERE TREX1__Status__c != :STATUS_CANCELLED
                    AND Id IN (SELECT TREX1__Course_Option__c 
                                 FROM TREX1__Course_Session_Option__c
-                               WHERE TREX1__Course_Session__r.TREX1__Course__r.TREX1__Program__c = :programId
-                                 AND TREX1__Course_Session__r.TREX1__Session__c = :sessionId)
+                               WHERE TREX1__cso_Course_Session__r.TREX1__Course__r.TREX1__Program__c = :programId
+                                 AND TREX1__cso_Course_Session__r.TREX1__Session__c = :sessionId)
                   WITH USER_MODE
                  ORDER BY TREX1__Start_Date__c ASC
                  LIMIT 1

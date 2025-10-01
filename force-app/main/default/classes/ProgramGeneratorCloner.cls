@@ -78,13 +78,13 @@ public with sharing class ProgramGeneratorCloner {
         stagedProgram.Staged_Program_Batch__c = this.batchId;
         stagedProgram.Status__c = STATUS_DRAFT;
         stagedProgram.Source_Course_Session_Option__c = cso.Id;
-        stagedProgram.Program__c = cso.TREX1__Course_Session__r.TREX1__Course__r.TREX1__Program__c;
-        stagedProgram.Program_Name__c = cso.TREX1__Course_Session__r.TREX1__Course__r.TREX1__Program__r.Name;
-        stagedProgram.Course_Name__c = cso.TREX1__Course_Session__r.TREX1__Course__r.Name;
-        stagedProgram.Course__c = cso.TREX1__Course_Session__r.TREX1__Course__c;
+        stagedProgram.Program__c = cso.TREX1__cso_Course_Session__r.TREX1__Course__r.TREX1__Program__c;
+        stagedProgram.Program_Name__c = cso.TREX1__cso_Course_Session__r.TREX1__Course__r.TREX1__Program__r.Name;
+        stagedProgram.Course_Name__c = cso.TREX1__cso_Course_Session__r.TREX1__Course__r.Name;
+        stagedProgram.Course__c = cso.TREX1__cso_Course_Session__r.TREX1__Course__c;
         stagedProgram.Session__c = targetSessionId;
-        stagedProgram.Session_Name__c = cso.TREX1__Course_Session__r.TREX1__Session__r.Name;
-        stagedProgram.Course_Session_Name__c = replaceSessionInfo(cso.TREX1__Course_Session__r.Name);
+        stagedProgram.Session_Name__c = cso.TREX1__cso_Course_Session__r.TREX1__Session__r.Name;
+        stagedProgram.Course_Session_Name__c = replaceSessionInfo(cso.TREX1__cso_Course_Session__r.Name);
         stagedProgram.Course_Option_Name__c = replaceSessionInfo(cso.TREX1__Course_Option__r.Name);
         stagedProgram.Days_of_Week__c = cso.TREX1__Course_Option__r.TREX1__Day_of_Week__c;
         stagedProgram.Start_Date__c = cso.TREX1__Course_Option__r.TREX1__Start_Date__c.addDays(this.daysToAdd);
@@ -164,9 +164,7 @@ public with sharing class ProgramGeneratorCloner {
         return productIds;
     }
 
-    private List<TREX1__Course_Session_Option__c> queryForCourseSessionOptions(
-        Set<Id> courseSessionOptionIds
-    ) {
+    private List<TREX1__Course_Session_Option__c> queryForCourseSessionOptions(Set<Id> courseSessionOptionIds) {
         return [
             SELECT Id, 
                    TREX1__Course_Option__c, 
@@ -187,13 +185,13 @@ public with sharing class ProgramGeneratorCloner {
                    TREX1__Course_Option__r.Primary_Facility__r.Name,
                    TREX1__Course_Option__r.TREX1__Product__c,
                    TREX1__Course_Option__r.TREX1__Unnamed_Group_Registration__c, 
-                   TREX1__Course_Session__c, 
-                   TREX1__Course_Session__r.Name, 
-                   TREX1__Course_Session__r.TREX1__Session__c, 
-                   TREX1__Course_Session__r.TREX1__Session__r.Name,
-                   TREX1__Course_Session__r.TREX1__Course__c,
-                   TREX1__Course_Session__r.TREX1__Course__r.Name,
-                   TREX1__Course_Session__r.TREX1__Course__r.TREX1__Program__r.Name
+                   TREX1__cso_Course_Session__c, 
+                   TREX1__cso_Course_Session__r.Name, 
+                   TREX1__cso_Course_Session__r.TREX1__Session__c, 
+                   TREX1__cso_Course_Session__r.TREX1__Session__r.Name,
+                   TREX1__cso_Course_Session__r.TREX1__Course__c,
+                   TREX1__cso_Course_Session__r.TREX1__Course__r.Name,
+                   TREX1__cso_Course_Session__r.TREX1__Course__r.TREX1__Program__r.Name
               FROM TREX1__Course_Session_Option__c
              WHERE Id IN :courseSessionOptionIds
               WITH USER_MODE

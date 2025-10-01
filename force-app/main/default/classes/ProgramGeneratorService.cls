@@ -294,7 +294,8 @@ public without sharing class ProgramGeneratorService {
         for (TREX1__Course_Option__c co : lstOptions) {
             TREX1__Course_Session_Option__c newCso = new TREX1__Course_Session_Option__c();
             String csKey = stagedPrograms.get(co.TREX1__Legacy_Id__c).Course_Session_Key__c;
-            newCso.TREX1__Course_Session__c = courseSessions.get(csKey).Id;
+            Id csId = courseSessions.get(csKey).Id;
+            newCso.TREX1__cso_Course_Session__c = csId;
             newCso.TREX1__Course_Option__c = co.Id;
             newCso.TREX1__Option_Available__c = true;
             newCso.TREX1__Available_Online__c = true;

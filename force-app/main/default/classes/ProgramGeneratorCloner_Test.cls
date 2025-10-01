@@ -15,7 +15,7 @@ private class ProgramGeneratorCloner_Test {
         List<TREX1__Course_Session_Option__c> csos = [
             SELECT Id
               FROM TREX1__Course_Session_Option__c
-             WHERE TREX1__Course_Session__r.TREX1__Session__c = :batch.Session__c
+             WHERE TREX1__cso_Course_Session__r.TREX1__Session__c = :batch.Session__c
         ];
         for (TREX1__Course_Session_Option__c cso : csos) {
             courseSessionOptionIds.add(cso.Id);
@@ -52,7 +52,7 @@ private class ProgramGeneratorCloner_Test {
         List<TREX1__Course_Session_Option__c> csos = [
             SELECT Id
               FROM TREX1__Course_Session_Option__c
-             WHERE TREX1__Course_Session__r.TREX1__Session__c = :originalSession.Id
+             WHERE TREX1__cso_Course_Session__r.TREX1__Session__c = :originalSession.Id
         ];
         for (TREX1__Course_Session_Option__c cso : csos) {
             courseSessionOptionIds.add(cso.Id);

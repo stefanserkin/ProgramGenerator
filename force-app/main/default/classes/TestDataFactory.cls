@@ -853,7 +853,7 @@ public class TestDataFactory {
             lstCourseSessionOptions.add(
                 new TREX1__Course_Session_Option__c(
                     TREX1__Course_Option__c = co.Id, 
-                    TREX1__Course_Session__c = mapOptionNamesToSessionIds.get(co.Name), 
+                    TREX1__cso_Course_Session__c = mapOptionNamesToSessionIds.get(co.Name), 
                     TREX1__Option_Available__c = true, 
                     TREX1__Available_Online__c = true
                 )
@@ -2161,11 +2161,11 @@ public class TestDataFactory {
     ) {
 
         List<TREX1__Course_Session_Option__c> lstCSOsWithLookups = [
-            SELECT Id, TREX1__Course_Session__r.Name, TREX1__Course_Session__r.TREX1__Session__c, 
-                   TREX1__Course_Session__r.TREX1__Session__r.Name, TREX1__Course_Session__r.TREX1__Course__c, 
-                   TREX1__Course_Session__r.TREX1__Course__r.TREX1__Program__c, 
-                   TREX1__Course_Session__r.TREX1__Session__r.TREX1__Start_Date__c, 
-                   TREX1__Course_Session__r.TREX1__Session__r.TREX1__End_Date__c, 
+            SELECT Id, TREX1__cso_Course_Session__r.Name, TREX1__cso_Course_Session__r.TREX1__Session__c, 
+                   TREX1__cso_Course_Session__r.TREX1__Session__r.Name, TREX1__cso_Course_Session__r.TREX1__Course__c, 
+                   TREX1__cso_Course_Session__r.TREX1__Course__r.TREX1__Program__c, 
+                   TREX1__cso_Course_Session__r.TREX1__Session__r.TREX1__Start_Date__c, 
+                   TREX1__cso_Course_Session__r.TREX1__Session__r.TREX1__End_Date__c, 
                    TREX1__Course_Option__c, TREX1__Course_Option__r.Name
               FROM TREX1__Course_Session_Option__c 
              WHERE Id IN :lstCSOs
@@ -2178,11 +2178,11 @@ public class TestDataFactory {
                 TREX1__Registration__c reg = new TREX1__Registration__c();
                 reg.TREX1__Contact__c = ct.Id;
                 reg.TREX1__Account__c = ct.AccountId;
-                reg.TREX1__reg_Program__c = cso.TREX1__Course_Session__r.TREX1__Course__r.TREX1__Program__c;
-                reg.TREX1__reg_Course__c = cso.TREX1__Course_Session__r.TREX1__Course__c;
-                reg.TREX1__reg_Course_Session__c = cso.TREX1__Course_Session__r.Id;
-                reg.TREX1__Start_Date__c = cso.TREX1__Course_Session__r.TREX1__Session__r.TREX1__Start_Date__c;
-                reg.TREX1__End_Date__c = cso.TREX1__Course_Session__r.TREX1__Session__r.TREX1__End_Date__c;
+                reg.TREX1__reg_Program__c = cso.TREX1__cso_Course_Session__r.TREX1__Course__r.TREX1__Program__c;
+                reg.TREX1__reg_Course__c = cso.TREX1__cso_Course_Session__r.TREX1__Course__c;
+                reg.TREX1__reg_Course_Session__c = cso.TREX1__cso_Course_Session__r.Id;
+                reg.TREX1__Start_Date__c = cso.TREX1__cso_Course_Session__r.TREX1__Session__r.TREX1__Start_Date__c;
+                reg.TREX1__End_Date__c = cso.TREX1__cso_Course_Session__r.TREX1__Session__r.TREX1__End_Date__c;
                 if (reg.TREX1__Start_Date__c > Date.today()) {
                     reg.TREX1__Registration_Status__c = REGISTRATION_STATUS_PENDING_ACTIVE;
                 } else if (reg.TREX1__Start_Date__c <= Date.today() && reg.TREX1__End_Date__c >= Date.today()) {
@@ -2199,7 +2199,7 @@ public class TestDataFactory {
         Map<String, String> mapCourseSessionToCourseOptionId = new Map<String, String>();
         for (TREX1__Course_Session_Option__c curCso : lstCSOs) {
             mapCourseSessionToCourseOptionId.put(
-                curCso.TREX1__Course_Session__c, 
+                curCso.TREX1__cso_Course_Session__c, 
                 curCso.TREX1__Course_Option__c
             );
         }
