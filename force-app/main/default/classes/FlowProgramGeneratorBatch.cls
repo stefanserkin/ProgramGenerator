@@ -4,8 +4,12 @@ public with sharing class FlowProgramGeneratorBatch {
     public static List<Result> runProgramGeneratorBatch(List<Request> requests) {
         List<Result> results = new List<Result>();
         for (Request request : requests) {
+            Integer batchSize = request.batchSize != null 
+                ? request.batchSize 
+                : (Integer) Program_Generator_Settings__c.getOrgDefaults().Batch_Size__c;
+
             ProgramGeneratorBatch pgb = new ProgramGeneratorBatch(request.batchId);
-            Id jobId = Database.executeBatch(pgb, 50);
+            Id jobId = Database.executeBatch(pgb, batchSize);
 
             Result result = new Result();
             result.jobId = jobId;
@@ -17,6 +21,9 @@ public with sharing class FlowProgramGeneratorBatch {
     public class Request {
         @InvocableVariable(label='Staged Program Batch ID' required=true)
         public String batchId;
+
+        @InvocableVariable(label='Batch Size')
+        public Integer batchSize;
     }
 
     public class Result {

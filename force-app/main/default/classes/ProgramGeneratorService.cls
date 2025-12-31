@@ -9,20 +9,13 @@ public without sharing class ProgramGeneratorService {
     private static final String PRICE_TYPE_MEMBER = 'Member';
     private static final String GBG_NAME = 'Asphalt Green';
     private static final String COURSE_OPTION_TYPE = 'Standard Course Option';
-    // private static final String NEW_COURSE_SESSION_STATUS = 'Draft';
-    // private static final String COURSE_OPTION_APPROVAL_STATUS = 'Pending Approval';
-    // private static final String NEW_COURSE_OPTION_STATUS = 'Draft';
-    // private static final String RECORD_TYPE_PRODUCT = 'Registration_Fee';
-    // private static final String RECORD_TYPE_PRICE_LEVEL = 'Dollar';
-    // private static final String RECORD_TYPE_PBS = 'Fee';
 
     private static final Decimal TRANSFER_FEE = 15.00;
     private static final Decimal WITHDRAWAL_FEE = 15.00;
     private static final Decimal INITIAL_FEE_AMOUNT = 25.00;
 
-    private static Program_Generator_Settings__c defaultSettings = ProgramGeneratorSettings.getInstance().settings;
+    private static Program_Generator_Settings__c defaultSettings = Program_Generator_Settings__c.getOrgDefaults();
     private static Id gbgId;
-    // private static Date pbsStartDate = Date.newInstance(2024, 1, 1);
 
     private Map<Id, Staged_Program__c> stagedPrograms;
     private Map<Id, TREX1__Session__c> sessions;
@@ -52,16 +45,10 @@ public without sharing class ProgramGeneratorService {
      * @returns void
      */
     public List<TREX1__Course_Option__c> run() {
-        // Get map of course sessions
         Map<String, TREX1__Course_Session__c> mapCourseSessions = getCourseSessionMap();
-
-        // Get map of products
         Map<String, TREX1__Product__c> mapProducts = getProductMap();
-
-        // Create course options
         List<TREX1__Course_Option__c> lstCos = createCourseOptions();
 
-        // Update staged programs
         List<Staged_Program__c> lstStagedProgramsToUpdate = new List<Staged_Program__c>();
         for (Staged_Program__c sp : stagedPrograms.values()) {
             lstStagedProgramsToUpdate.add(
@@ -104,7 +91,6 @@ public without sharing class ProgramGeneratorService {
             courseSessions.put(newCsKey, newCs);
         }
 
-        // Return course session map
         return courseSessions;
     }
 
@@ -138,7 +124,6 @@ public without sharing class ProgramGeneratorService {
             products.put(newProd.Key__c, newProd);
         }
 
-        // Return map of products
         return products;
     }
 
@@ -228,6 +213,7 @@ public without sharing class ProgramGeneratorService {
             co.TREX1__Available_Online__c = sp.Available_Online__c;
             co.Do_Not_Create_Bookings__c = sp.Do_Not_Create_Bookings__c;
             co.TREX1__Unnamed_Group_Registration__c = sp.Anonymous_Ticket__c;
+            co.TREX1__Instructor__c = sp.Primary_Instructor__c;
 
             // Product
             co.TREX1__Product__c = sp.Free_Program__c 
@@ -363,7 +349,6 @@ public without sharing class ProgramGeneratorService {
         }
         Database.insert(lstPbs, true, AccessLevel.SYSTEM_MODE);
 
-        // Return products
         return lstProducts;
     }
 
@@ -372,7 +357,6 @@ public without sharing class ProgramGeneratorService {
      */
     private TREX1__Price_Level__c getNewPriceLevel(TREX1__Product__c product, String priceType) {
         Staged_Program__c sp = mapProdKeyToStagedProgram.get(product.Key__c);
-        // TREX1__Session__c session = getSessionMap().get(sp.Session__c);
 
         TREX1__Price_Level__c pl = new TREX1__Price_Level__c();
         pl.Name = product.Name.left(69) + ' ' + priceType;
@@ -515,7 +499,8 @@ public without sharing class ProgramGeneratorService {
                    Do_Not_Create_Bookings__c,
                    Anonymous_Ticket__c,
                    Waive_Initial_Fee__c,
-                   Available_Online__c
+                   Available_Online__c,
+                   Primary_Instructor__c
               FROM Staged_Program__c
              WHERE Id IN :stagedProgramIds
                AND Status__c = :STATUS_STAGED

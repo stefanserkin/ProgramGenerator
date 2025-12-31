@@ -742,15 +742,15 @@ public class TestDataFactory {
     /***********************************
      * Contacts
      ***********************************/
+    
+    private static Integer contactCounter = 0;
 
     /**
      * Create contact sObjects without accounts
      * No DML - returns unsaved list of sObjects
      * @param Integer Number of contacts to create for each account
      */
-    public static List<Contact> createContacts(
-        Integer numberOfContacts
-    ) {
+    public static List<Contact> createContacts(Integer numberOfContacts) {
         return generateContactsWithDefaults(numberOfContacts);
     }
 
@@ -786,13 +786,14 @@ public class TestDataFactory {
         for (Integer i = 0; i < numberOfContacts; i++) {
             lstDefaultCts.add(
                 new Contact(
-                    FirstName  = CONTACT_BASE_FIRST_NAME + String.valueOf(i),
-                    MiddleName = CONTACT_BASE_MIDDLE_NAME + String.valueOf(i),
-                    LastName   = CONTACT_BASE_LAST_NAME + String.valueOf(i),
-                    Email      = CONTACT_BASE_FIRST_NAME + CONTACT_BASE_LAST_NAME + String.valueOf(i) + '@testingstuff.com',
+                    FirstName  = CONTACT_BASE_FIRST_NAME + String.valueOf(contactCounter),
+                    MiddleName = CONTACT_BASE_MIDDLE_NAME + String.valueOf(contactCounter),
+                    LastName   = CONTACT_BASE_LAST_NAME + String.valueOf(contactCounter),
+                    Email      = CONTACT_BASE_FIRST_NAME + CONTACT_BASE_LAST_NAME + String.valueOf(contactCounter) + '@testingstuff.com',
                     Birthdate  = CONTACT_BASE_BIRTHDATE.addYears(-i).addMonths(i)
                 )
             );
+            contactCounter++;
         }
         return lstDefaultCts;
     }
@@ -2626,8 +2627,26 @@ public class TestDataFactory {
      * Staged Program Batches
      ***********************************/
     /**
-     * Create sas sObjects for a staff record
-     * No DML - returns unsaved list of sas sObjects
+     * Create program generator settings custom setting org defaults
+     * No DML - returns unsaved list of sObjects
+     */
+    public static Program_Generator_Settings__c createProgramGeneratorSettings() {
+        return new Program_Generator_Settings__c(
+            Name = 'Default',
+            Batch_Size__c = 50,
+            New_Course_Option_Status__c = 'Draft',
+            New_Course_Option_Approval_Status__c = 'Pending Approval',
+            New_Course_Session_Status__c = 'Draft',
+            Product_Record_Type_Name__c = 'Registration_Fee',
+            Price_Level_Record_Type_Name__c = 'Dollar',
+            PBS_Record_Type_Name__c = 'Fee',
+            Planned_Billing_Schedule_Start_Date__c = System.today()
+        );
+    }
+    
+    /**
+     * Create staged program batch sObjects for a session
+     * No DML - returns unsaved list of sObjects
      */
     public static List<Staged_Program_Batch__c> createStagedProgramBatches(
         TREX1__Session__c session,

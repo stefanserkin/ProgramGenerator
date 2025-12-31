@@ -6,9 +6,14 @@ private class ProgramGeneratorBatch_Test {
     @TestSetup
     static void makeData() {
         TREX1__Program__c program = TestDataFactory.createTractionRecProgramLibrary();
+
         TREX1__Session__c session = [SELECT Id, Name FROM TREX1__Session__c LIMIT 1];
+
+        insert TestDataFactory.createProgramGeneratorSettings();
+
         Staged_Program_Batch__c batch = TestDataFactory.createStagedProgramBatches(session, 1).get(0);
         insert batch;
+        
         List<Staged_Program__c> stagedPrograms = TestDataFactory.createStagedPrograms(
             batch, 
             program, 
