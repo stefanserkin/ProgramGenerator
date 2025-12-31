@@ -5,23 +5,24 @@ public without sharing class ProgramGeneratorService {
     private static final String STATUS_FAILED = 'Processed with Errors';
     private static final String LOCATION_BPC = 'Battery Park City';
     private static final String LOCATION_UES = 'Upper East Side';
-    private static final String NEW_COURSE_SESSION_STATUS = 'Draft';
-    private static final String COURSE_OPTION_APPROVAL_STATUS = 'Pending Approval';
-    private static final String NEW_COURSE_OPTION_STATUS = 'Draft';
     private static final String PRICE_TYPE_PUBLIC = 'Non-Member';
     private static final String PRICE_TYPE_MEMBER = 'Member';
-    private static final String RECORD_TYPE_PRODUCT = 'Registration_Fee';
-    private static final String RECORD_TYPE_PRICE_LEVEL = 'Dollar';
-    private static final String RECORD_TYPE_PBS = 'Fee';
     private static final String GBG_NAME = 'Asphalt Green';
     private static final String COURSE_OPTION_TYPE = 'Standard Course Option';
+    // private static final String NEW_COURSE_SESSION_STATUS = 'Draft';
+    // private static final String COURSE_OPTION_APPROVAL_STATUS = 'Pending Approval';
+    // private static final String NEW_COURSE_OPTION_STATUS = 'Draft';
+    // private static final String RECORD_TYPE_PRODUCT = 'Registration_Fee';
+    // private static final String RECORD_TYPE_PRICE_LEVEL = 'Dollar';
+    // private static final String RECORD_TYPE_PBS = 'Fee';
 
     private static final Decimal TRANSFER_FEE = 15.00;
     private static final Decimal WITHDRAWAL_FEE = 15.00;
     private static final Decimal INITIAL_FEE_AMOUNT = 25.00;
 
+    private static Program_Generator_Settings__c defaultSettings = ProgramGeneratorSettings.getInstance().settings;
     private static Id gbgId;
-    private static Date pbsStartDate = Date.newInstance(2024, 1, 1);
+    // private static Date pbsStartDate = Date.newInstance(2024, 1, 1);
 
     private Map<Id, Staged_Program__c> stagedPrograms;
     private Map<Id, TREX1__Session__c> sessions;
@@ -32,13 +33,13 @@ public without sharing class ProgramGeneratorService {
     private Map<String, Staged_Program__c> mapCsKeyToStagedProgram;
 
     private static Id productRecordTypeId = Schema.SObjectType.TREX1__Product__c
-        .getRecordTypeInfosByDeveloperName().get(RECORD_TYPE_PRODUCT).getRecordTypeId();
+        .getRecordTypeInfosByDeveloperName().get(defaultSettings.Product_Record_Type_Name__c).getRecordTypeId();
 
     private static Id priceLevelRecordTypeId = Schema.SObjectType.TREX1__Price_Level__c
-        .getRecordTypeInfosByDeveloperName().get(RECORD_TYPE_PRICE_LEVEL).getRecordTypeId();
+        .getRecordTypeInfosByDeveloperName().get(defaultSettings.Price_Level_Record_Type_Name__c).getRecordTypeId();
     
     private static Id pbsRecordTypeId = Schema.SObjectType.TREX1__Planned_Billing_Schedule__c
-        .getRecordTypeInfosByDeveloperName().get(RECORD_TYPE_PBS).getRecordTypeId();
+        .getRecordTypeInfosByDeveloperName().get(defaultSettings.PBS_Record_Type_Name__c).getRecordTypeId();
 
 
     public ProgramGeneratorService(Set<Id> stagedProgramIds) {
@@ -153,7 +154,7 @@ public without sharing class ProgramGeneratorService {
             newCs.Name = newCsSp.Course_Session_Name__c;
             newCs.TREX1__Course__c = newCsSp.Course__c;
             newCs.TREX1__Session__c = session.Id;
-            newCs.TREX1__Status__c = ProgramGeneratorSettings.getInstance().settings.New_Course_Session_Status__c;
+            newCs.TREX1__Status__c = defaultSettings.New_Course_Session_Status__c;
             newCs.TREX1__Product__c = session.Free_Product__c;
 
             // Set location-specific properties
@@ -207,8 +208,8 @@ public without sharing class ProgramGeneratorService {
             co.Name = sp.Course_Option_Name__c.left(80);
             co.TREX1__Code__c = sp.Course_Option_Code__c;
             co.TREX1__Type__c = COURSE_OPTION_TYPE;
-            co.Approval_Status__c = ProgramGeneratorSettings.getInstance().settings.New_Course_Option_Approval_Status__c;
-            co.TREX1__Status__c = ProgramGeneratorSettings.getInstance().settings.New_Course_Option_Status__c;
+            co.Approval_Status__c = defaultSettings.New_Course_Option_Approval_Status__c;
+            co.TREX1__Status__c = defaultSettings.New_Course_Option_Status__c;
             co.Minimum_Participants__c = sp.Minimum_Participants__c;
             co.TREX1__Capacity__c = sp.Capacity__c;
             co.TREX1__Age_Min__c = sp.Minimum_Age__c;
@@ -354,7 +355,7 @@ public without sharing class ProgramGeneratorService {
             pbs.TREX1__End_Date_Setting__c = 'Fixed End Date';
             pbs.TREX1__Number_Of_Terms__c = 1;
             pbs.TREX1__Proration_Setting__c = 'Do Not Prorate';
-            pbs.TREX1__Start_Date__c = pbsStartDate;
+            pbs.TREX1__Start_Date__c = defaultSettings.Planned_Billing_Schedule_Start_Date__c;
             pbs.TREX1__Term_Type__c = 'One Time';
             pbs.TREX1__Amount__c = pl.TREX1__Price_Type__c == PRICE_TYPE_PUBLIC ? sp.Public_Price__c : sp.Member_Price__c;
             pbs.TREX1__Legacy_Id__c = sp.Id;
