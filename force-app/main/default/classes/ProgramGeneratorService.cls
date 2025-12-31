@@ -153,7 +153,7 @@ public without sharing class ProgramGeneratorService {
             newCs.Name = newCsSp.Course_Session_Name__c;
             newCs.TREX1__Course__c = newCsSp.Course__c;
             newCs.TREX1__Session__c = session.Id;
-            newCs.TREX1__Status__c = NEW_COURSE_SESSION_STATUS;
+            newCs.TREX1__Status__c = ProgramGeneratorSettings.getInstance().settings.New_Course_Session_Status__c;
             newCs.TREX1__Product__c = session.Free_Product__c;
 
             // Set location-specific properties
@@ -207,8 +207,8 @@ public without sharing class ProgramGeneratorService {
             co.Name = sp.Course_Option_Name__c.left(80);
             co.TREX1__Code__c = sp.Course_Option_Code__c;
             co.TREX1__Type__c = COURSE_OPTION_TYPE;
-            co.Approval_Status__c = COURSE_OPTION_APPROVAL_STATUS;
-            co.TREX1__Status__c = NEW_COURSE_OPTION_STATUS;
+            co.Approval_Status__c = ProgramGeneratorSettings.getInstance().settings.New_Course_Option_Approval_Status__c;
+            co.TREX1__Status__c = ProgramGeneratorSettings.getInstance().settings.New_Course_Option_Status__c;
             co.Minimum_Participants__c = sp.Minimum_Participants__c;
             co.TREX1__Capacity__c = sp.Capacity__c;
             co.TREX1__Age_Min__c = sp.Minimum_Age__c;

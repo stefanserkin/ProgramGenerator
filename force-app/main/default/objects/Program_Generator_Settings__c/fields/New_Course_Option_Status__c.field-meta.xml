@@ -1,0 +1,13 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<CustomField xmlns="http://soap.sforce.com/2006/04/metadata">
+    <fullName>New_Course_Option_Status__c</fullName>
+    <description>The Status value to assign to newly created course options</description>
+    <externalId>false</externalId>
+    <inlineHelpText>The Status value to assign to newly created course options</inlineHelpText>
+    <label>New Course Option Status</label>
+    <length>255</length>
+    <required>false</required>
+    <trackTrending>false</trackTrending>
+    <type>Text</type>
+    <unique>false</unique>
+</CustomField>

@@ -1,0 +1,1 @@
+public class ProgramGeneratorException extends Exception {}
