@@ -328,7 +328,10 @@ public without sharing class ProgramGeneratorService {
                 lstPriceLevels.add( getNewPriceLevel(prod, PRICE_TYPE_MEMBER) );
             }
         }
+
+        MetadataTriggerHandler.bypass('TA_PriceLevel_SetProductPriceAI');
         Database.insert(lstPriceLevels, true, AccessLevel.SYSTEM_MODE);
+        MetadataTriggerHandler.clearBypass('TA_PriceLevel_SetProductPriceAI');
 
         // Planned Billing Schedules
         List<TREX1__Planned_Billing_Schedule__c> lstPbs = new List<TREX1__Planned_Billing_Schedule__c>();
